@@ -33,7 +33,7 @@ jobs:
         run: bun install
 
       - name: Run Bun start
-        run: bun start
+        run: bun start bun:start
 
       - name: Upload assets
         uses: actions/upload-artifact@v3
