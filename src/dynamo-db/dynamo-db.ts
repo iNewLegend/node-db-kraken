@@ -2,16 +2,134 @@ import { exec, spawn } from "node:child_process";
 import * as fs from "node:fs";
 import net from "node:net";
 import * as path from "node:path";
-
+import * as crypto from "node:crypto";
+import * as util from "node:util";
 import * as tar from "tar";
+import fetch from "node-fetch";
 
+const DYNAMO_DB_LOCAL_CHECKSUM = 'f5296028d645bb2d3f99fede0a36945956eb7386174430e75c00e6fb1b34e78d';
 const NODE_MODULES_DIR = path.dirname( process.env[ "npm_package_json" ]! ) + "/node_modules";
 const DYNAMO_DB_LOCAL_DIR = path.join( NODE_MODULES_DIR, ".bin/dynamodb-local" );
 const TEMP_TAR_FILE = path.join( "/tmp", "dynamodb_local_latest.tar.gz" );
+const DYNAMO_DB_LOCAL_TAR = path.join( DYNAMO_DB_LOCAL_DIR, 'dynamodb_local_latest.tar.gz' );
+const DYNAMODB_URL = 'https://d1ni2b6xgvw0s0.cloudfront.net/v2.x/dynamodb_local_latest.tar.gz';
 
-const DYNAMODB_URL = 'https://s3.us-west-2.amazonaws.com/dynamodb-local/dynamodb_local_latest.tar.gz';
+function calculateChecksum( filePath: string ): Promise<string> {
+    return new Promise( ( resolve, reject ) => {
+        const hash = crypto.createHash( 'sha256' );
+        const stream = fs.createReadStream( filePath );
+
+        stream.on( 'data', data => hash.update( data ) );
+        stream.on( 'end', () => resolve( hash.digest( 'hex' ) ) );
+        stream.on( 'error', reject );
+    } );
+}
+
+function validateChecksum( filePath: string, expectedChecksum: string ): Promise<void> {
+    return new Promise( async ( resolve, reject ) => {
+        try {
+            const calculatedChecksum = await calculateChecksum( filePath );
+            if ( calculatedChecksum === expectedChecksum ) {
+                resolve();
+            } else {
+                reject( `Checksum mismatch: expected ${ expectedChecksum }, but got ${ calculatedChecksum }` );
+            }
+        } catch ( error ) {
+            reject( `Error calculating checksum: ${ error.message }` );
+        }
+    } );
+}
+
+function extractDynamoDBLocal( file: string ) {
+    return new Promise<void>( ( resolve, reject ) => {
+        tar.x( {
+            file,
+            cwd: DYNAMO_DB_LOCAL_DIR
+        }, ( error ) => {
+            if ( error ) {
+                reject( `Extraction error: ${ error.message }` );
+            } else {
+                console.log( `Extraction completed.` );
+                resolve();
+            }
+        } );
+    } );
+}
+
+async function downloadFileWithProgress( url: string, dest: string ): Promise<void> {
+    const res = await fetch( url );
+    if ( ! res.ok ) {
+        throw new Error( `Failed to download DynamoDB Local: ${ res.statusText }` );
+    }
+
+    const totalBytes = parseInt( res.headers.get( 'content-length' ) || '0', 10 );
+    if ( totalBytes === 0 ) {
+        throw new Error( 'Unable to determine the total download size.' );
+    }
+
+    const fileStream = fs.createWriteStream( dest );
+    let downloadedBytes = 0;
+
+    return new Promise( ( resolve, reject ) => {
+        if ( ! res.body ) {
+            throw new Error( 'Response body is missing.' );
+        }
+        res.body.on( 'data', chunk => {
+            fileStream.write( chunk );
+            downloadedBytes += chunk.length;
+            const progress = ( ( downloadedBytes / totalBytes ) * 100 ).toFixed( 2 );
+            process.stdout.write( `\rProgress: ${ progress }%` );
+        } );
+
+        res.body.on( 'end', () => {
+            fileStream.end();
+        } );
+
+        fileStream.on( 'finish', () => {
+            console.log( '\nDownload completed.' );
+            resolve();
+        } );
+
+        res.body.on( 'error', reject );
+        fileStream.on( 'error', reject );
+    } );
+}
 
 export async function dDBDownload( retryCount = 3 ) {
+    try {
+        const isTargetEmpty = ( fs.readdirSync( DYNAMO_DB_LOCAL_DIR ).length === 0 );
+        if ( isTargetEmpty ) {
+            // Remove the LOCAL_DIR if it's empty
+            fs.rmdirSync( DYNAMO_DB_LOCAL_DIR, { recursive: true } );
+        }
+    } catch ( e ) {
+
+    }
+
+    // If file exist in /tmp directory and checksum matches, and the target directory is empty re-extract
+    if ( fs.existsSync( TEMP_TAR_FILE ) ) {
+        const result = await validateChecksum( TEMP_TAR_FILE, DYNAMO_DB_LOCAL_CHECKSUM )
+            .then( async () => {
+                    return "re-extract";
+                }, () => {
+                    return "re-download"
+                }
+            ).catch();
+
+        if ( result === "re-download" ) {
+            // If checksum doesn't match, delete the file and re-download
+            fs.unlinkSync( TEMP_TAR_FILE );
+
+            return dDBDownload( retryCount );
+        }
+
+        if ( result === "re-extract" ) {
+            return extractDynamoDBLocal( TEMP_TAR_FILE );
+        }
+
+        throw new Error( "Something went wrong" );
+    }
+
     let attempts = 0;
     while ( attempts < retryCount ) {
         try {
@@ -20,68 +138,25 @@ export async function dDBDownload( retryCount = 3 ) {
                 return;
             }
 
+            await downloadFileWithProgress( DYNAMODB_URL, TEMP_TAR_FILE );
+
+            console.log( "" )
+
+            await validateChecksum( TEMP_TAR_FILE, DYNAMO_DB_LOCAL_CHECKSUM );
+
             if ( ! fs.existsSync( DYNAMO_DB_LOCAL_DIR ) ) {
                 fs.mkdirSync( DYNAMO_DB_LOCAL_DIR, { recursive: true } );
             }
-            if ( ! fs.existsSync( DYNAMO_DB_LOCAL_DIR ) ) {
-                fs.mkdirSync( DYNAMO_DB_LOCAL_DIR, { recursive: true } );
-            }
 
-            // Fetch DynamoDB Local
-            const res = await fetch( DYNAMODB_URL );
-            if ( ! res.ok ) {
-                throw new Error( `Failed to download DynamoDB Local: ${ res.statusText }` );
-            }
+            await extractDynamoDBLocal( TEMP_TAR_FILE );
+        } catch ( error ) {
+            console.error( `Attempt ${ attempts + 1 }/${ retryCount } failed: ${ util.inspect( error, { depth: null } ) }` );
+            attempts++;
 
-            if ( ! res.body ) {
-                throw new Error( `Failed to download DynamoDB Local: ${ res.statusText }` );
-            }
-
-            // Total size of the content (in bytes)
-            const totalSize = parseInt( res.headers.get( 'content-length' ) || '0', 10 );
-            let receivedSize = 0;
-
-            // Create file stream to write to temporary tar file
-            const fileStream = fs.createWriteStream( TEMP_TAR_FILE );
-
-            // Get readable stream from response body
-            const reader = res.body.getReader();
-
-            // Read and write data chunks
-            while ( true ) {
-                const { done, value } = await reader.read();
-                if ( done ) break;
-                const chunk = Buffer.from( value );
-
-                receivedSize += chunk.length;
-                const progress = ( ( receivedSize / totalSize ) * 100 ).toFixed( 2 );
-                process.stdout.write( `Downloading DynamoDB Local: ${ progress }%\r` );
-
-                fileStream.write( chunk );
-            }
-
-            // Close file stream
-            fileStream.end();
-
-            // Extract the tarball
-            await tar.x( {
-                file: TEMP_TAR_FILE,
-                cwd: DYNAMO_DB_LOCAL_DIR,
-                strip: 1 // Removes the top-level directory
-            } );
-
-            // Clean up the temporary tar file
-            fs.unlinkSync( TEMP_TAR_FILE );
-            console.log( '\nDynamoDB Local downloaded and extracted successfully.' );
-            return;
-        } catch ( err ) {
-            if ( attempts < retryCount - 1 ) {
-                console.log( `Retrying download... Attempt ${ attempts + 2 } of ${ retryCount }` );
-            } else {
-                throw err;
+            if ( attempts >= retryCount ) {
+                throw new Error( `Failed to download and install DynamoDB Local after ${ retryCount } attempts.` );
             }
         }
-        attempts++;
     }
 }
 

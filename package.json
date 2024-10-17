@@ -3,14 +3,22 @@
     "module": "index.ts",
     "type": "module",
     "scripts": {
-        "preinstall": "./scripts/install-java.sh && echo Checking Java installation...",
+        "preinstall": "./scripts/install-java-runner.sh",
+        "clean": "rm -rf node_modules bun.lockb package-lock.json",
         "bun:start": "bun --bun run src/index.ts",
         "tsx:debug": "tsx src/index.ts",
         "bun:debug": "bun --bun --inspect-brk run src/index.ts",
         "bun:get-remote-tables": "bun --bun run src/get-tables-from-remote.ts",
         "bun:fresh-start": "bun --bun run src/index.ts --fresh-start"
     },
+    "dependencies": {
+        "@aws-sdk/client-dynamodb": "3.670.0",
+        "tar": "7.4.3",
+        "node-fetch": "^3.3.2"
+    },
     "devDependencies": {
+        "bun": "latest",
+        "tsx": "latest",
         "@types/bun": "latest",
         "@types/node": "^22.7.5",
         "@types/tar": "^6.1.13"
