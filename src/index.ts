@@ -1,14 +1,7 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import * as fs from "node:fs";
 import { DynamoDBLocalServer } from "./dynamo-db/dynamo-db-server";
-
-import {
-    dDBGetTableSchema,
-    dDBCreateTablesWithData,
-    dDBDropAllTables,
-    dDBFetchTableData,
-    dDBListTables
-} from "./dynamo-db/dynamo-db-util";
+import { DynamoDBUtil } from "./dynamo-db/dynamo-db-util";
 
 const client = new DynamoDBClient( {
     credentials: {
@@ -18,6 +11,8 @@ const client = new DynamoDBClient( {
     region: "fakeRegion",
     endpoint: "http://localhost:8000",
 } );
+
+const dbUtil = new DynamoDBUtil( client );
 
 let dbInternalsExtractPath: string | undefined;
 
@@ -57,16 +52,17 @@ function handleArgvBeforeStart() {
 
 async function processArgvAfterStart() {
     if ( process.argv.includes( "--db-fresh-start" ) ) {
-        await dDBDropAllTables( client )
+        await dbUtil.dropAllTables()
     }
 }
 
 async function handleTableCreation() {
-    let listTableResult = ( await dDBListTables( client ) ) !;
+    let listTableResult = ( await dbUtil.listTables() ) !;
 
     if ( ! listTableResult?.length ) {
-        await dDBCreateTablesWithData( client, process.cwd() + "/tables.json" );
-        listTableResult = ( await dDBListTables( client ) ) !; // Re-fetch the list after table creation
+        await dbUtil.createTablesWithData( process.cwd() + "/tables.json" );
+
+        listTableResult = ( await dbUtil.listTables() ) !; // Re-fetch the list after table creation
     }
     return listTableResult;
 }
@@ -95,8 +91,8 @@ async function processAllTables() {
     for ( const tableName of tableNames ) {
         console.log( `Processing table: ${ tableName }` );
 
-        const partitionKey = await dDBGetTableSchema( client, tableName );
-        const tableData = await dDBFetchTableData( client, tableName );
+        const partitionKey = await dbUtil.getTableSchema( tableName );
+        const tableData = await dbUtil.fetchTableData( tableName );
 
         const packedData = transformToPackedMode( tableData, partitionKey );
 

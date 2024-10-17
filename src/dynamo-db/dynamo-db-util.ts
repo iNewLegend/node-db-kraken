@@ -15,196 +15,204 @@ import * as util from "node:util";
 
 const debug = util.debug( 'dynamodb-local:util' );
 
-const readFileAndParseJSON = async ( filePath: string ) => {
-    const fileContent = await fs.readFile( filePath, 'utf-8' );
-    return JSON.parse( fileContent );
-};
+export class DynamoDBUtil {
+    private client: DynamoDBClient;
 
-function convertToUint8Array( data: any ): Uint8Array {
-    return new Uint8Array( Object.values( data ) );
-}
+    public constructor( client: DynamoDBClient ) {
+        this.client = client;
+    }
 
-export async function dDBListTables( client: DynamoDBClient ) {
-    const command = new ListTablesCommand( {} );
+    private async readFileAndParseJSON( filePath: string ) {
+        const fileContent = await fs.readFile( filePath, 'utf-8' );
+        return JSON.parse( fileContent );
+    }
 
-    debug( "Listing all tables..." );
+    private convertToUint8Array( data: any ): Uint8Array {
+        return new Uint8Array( Object.values( data ) );
+    }
 
-    const response = await client.send( command );
+    async listTables() {
+        const command = new ListTablesCommand( {} );
 
-    debug( "Tables found:", response.TableNames );
+        debug( "Listing all tables..." );
 
-    return response.TableNames;
-}
+        const response = await this.client.send( command );
 
-export async function dDBDescribeTable( client: DynamoDBClient, tableName: string ) {
-    const command = new DescribeTableCommand( { TableName: tableName } );
+        debug( "Tables found:", response.TableNames );
 
-    debug( `Describing table: ${ tableName }...` );
+        return response.TableNames;
+    }
 
-    const response = await client.send( command );
+    async describeTable( tableName: string ) {
+        const command = new DescribeTableCommand( { TableName: tableName } );
 
-    debug( `Table description for ${ tableName }:`, response.Table );
+        debug( `Describing table: ${ tableName }...` );
 
-    return response.Table;
-}
+        const response = await this.client.send( command );
 
-export async function dDBSaveTables( tables: TableDescription[], filePath: string ) {
-    debug( "Saving tables to file:", filePath );
+        debug( `Table description for ${ tableName }:`, response.Table );
 
-    await fs.writeFile( filePath, JSON.stringify( tables, null, 2 ) );
+        return response.Table;
+    }
 
-    debug( "Tables saved successfully." );
-}
+    async saveTables( tables: TableDescription[], filePath: string ) {
+        debug( "Saving tables to file:", filePath );
 
-export async function dDBListAndSaveTables( client: DynamoDBClient, filePath: string ) {
-    try {
-        const tableNames = await dDBListTables( client );
+        await fs.writeFile( filePath, JSON.stringify( tables, null, 2 ) );
 
-        if ( ! tableNames || tableNames.length === 0 ) {
-            debug( "No tables found to list and save." );
-            return;
-        }
+        debug( "Tables saved successfully." );
+    }
 
-        const tableDetails = await Promise.all( tableNames.map( async ( tableName ) => {
-            const description = await dDBDescribeTable( client, tableName );
-            const data = await dDBFetchTableData( client, tableName );
+    async listAndSaveTables( filePath: string ) {
+        try {
+            const tableNames = await this.listTables();
 
-            if ( ! description || ! data ) {
-                throw new Error( `Failed to get table description or data for table ${ tableName }` );
+            if ( ! tableNames || tableNames.length === 0 ) {
+                debug( "No tables found to list and save." );
+                return;
             }
 
-            return {
-                ... description,
-                data
-            };
-        } ) );
+            const tableDetails = await Promise.all( tableNames.map( async ( tableName ) => {
+                const description = await this.describeTable( tableName );
+                const data = await this.fetchTableData( tableName );
 
-        debug( "Saving table descriptions and data to file:", filePath );
+                if ( ! description || ! data ) {
+                    throw new Error( `Failed to get table description or data for table ${ tableName }` );
+                }
 
-        await dDBSaveTables( tableDetails, filePath );
+                return {
+                    ... description,
+                    data
+                };
+            } ) );
 
-        debug( "Tables with data saved successfully." );
-    } catch ( error ) {
-        console.error( "Failed to list and save tables:", error );
+            debug( "Saving table descriptions and data to file:", filePath );
+
+            await this.saveTables( tableDetails, filePath );
+
+            debug( "Tables with data saved successfully." );
+        } catch ( error ) {
+            console.error( "Failed to list and save tables:", error );
+        }
     }
-}
 
-async function dDBInsertDataIntoTable( client: DynamoDBClient, tableName: string, items: any[] ) {
-    for ( const item of items ) {
-        for ( const key in item ) {
-            if ( item[ key ].B ) {
-                item[ key ].B = convertToUint8Array( item[ key ].B );
+    async insertDataIntoTable( tableName: string, items: any[] ) {
+        for ( const item of items ) {
+            for ( const key in item ) {
+                if ( item[ key ].B ) {
+                    item[ key ].B = this.convertToUint8Array( item[ key ].B );
+                }
+                if ( item[ key ].BS ) {
+                    item[ key ].BS = item[ key ].BS.map( this.convertToUint8Array );
+                }
             }
-            if ( item[ key ].BS ) {
-                item[ key ].BS = item[ key ].BS.map( convertToUint8Array );
+            const command = new PutItemCommand( { TableName: tableName, Item: item } );
+
+            await this.client.send( command );
+
+            debug( `Inserted item into ${ tableName }:`, item );
+        }
+    }
+
+    async createTables( filePath: string ) {
+        try {
+            const tables = await this.readFileAndParseJSON( filePath );
+
+            for ( const table of tables ) {
+                const createTableParams = {
+                    TableName: table.TableName,
+                    AttributeDefinitions: table.AttributeDefinitions,
+                    KeySchema: table.KeySchema,
+                    ProvisionedThroughput: table.ProvisionedThroughput,
+                    StreamSpecification: table.StreamSpecification,
+                    TableClass: table.TableClassSummary?.TableClass
+                };
+
+                debug( "Creating table:", table.TableName );
+
+                const command = new CreateTableCommand( createTableParams );
+                const response = await this.client.send( command );
+
+                debug( `Table ${ table.TableName } created successfully.`, response.TableDescription );
             }
+        } catch ( error ) {
+            console.error( "Failed to create tables:", error );
         }
-        const command = new PutItemCommand( { TableName: tableName, Item: item } );
-
-        await client.send( command );
-
-        debug( `Inserted item into ${ tableName }:`, item );
     }
-}
 
-export async function dDBCreateTables( client: DynamoDBClient, filePath: string ) {
-    try {
-        const tables = await readFileAndParseJSON( filePath );
+    async createTablesWithData( filePath: string ) {
+        try {
+            await this.createTables( filePath );
 
-        for ( const table of tables ) {
-            const createTableParams = {
-                TableName: table.TableName,
-                AttributeDefinitions: table.AttributeDefinitions,
-                KeySchema: table.KeySchema,
-                ProvisionedThroughput: table.ProvisionedThroughput,
-                StreamSpecification: table.StreamSpecification,
-                TableClass: table.TableClassSummary?.TableClass
-            };
+            const tables = await this.readFileAndParseJSON( filePath );
 
-            debug( "Creating table:", table.TableName );
+            for ( const table of tables ) {
+                if ( table.data && table.data.length > 0 ) {
+                    debug( `Inserting data into ${ table.TableName }` );
 
-            const command = new CreateTableCommand( createTableParams );
-            const response = await client.send( command );
+                    await this.insertDataIntoTable( table.TableName, table.data );
 
-            debug( `Table ${ table.TableName } created successfully.`, response.TableDescription );
-        }
-    } catch ( error ) {
-        console.error( "Failed to create tables:", error );
-    }
-}
-
-export async function dDBCreateTablesWithData( client: DynamoDBClient, filePath: string ) {
-    try {
-        await dDBCreateTables( client, filePath );
-
-        const tables = await readFileAndParseJSON( filePath );
-
-        for ( const table of tables ) {
-            if ( table.data && table.data.length > 0 ) {
-                debug( `Inserting data into ${ table.TableName }` );
-
-                await dDBInsertDataIntoTable( client, table.TableName, table.data );
-
-                debug( `Data inserted into ${ table.TableName }` );
+                    debug( `Data inserted into ${ table.TableName }` );
+                }
             }
+        } catch ( error ) {
+            console.error( "Failed to create tables and insert data:", error );
         }
-    } catch ( error ) {
-        console.error( "Failed to create tables and insert data:", error );
     }
-}
 
-export async function dDBGetTableSchema( client: DynamoDBClient, tableName: string ) {
-    const command = new DescribeTableCommand( { TableName: tableName } );
+    async getTableSchema( tableName: string ) {
+        const command = new DescribeTableCommand( { TableName: tableName } );
 
-    debug( `Getting schema for table: ${ tableName }` );
+        debug( `Getting schema for table: ${ tableName }` );
 
-    const { Table } = await client.send( command );
-    const partitionKey = Table?.KeySchema?.find( key => key.KeyType === "HASH" )?.AttributeName ?? "";
+        const { Table } = await this.client.send( command );
+        const partitionKey = Table?.KeySchema?.find( key => key.KeyType === "HASH" )?.AttributeName ?? "";
 
-    debug( `Partition key for table ${ tableName }: ${ partitionKey }` );
+        debug( `Partition key for table ${ tableName }: ${ partitionKey }` );
 
-    return partitionKey;
-}
+        return partitionKey;
+    }
 
-export async function dDBFetchTableData( client: DynamoDBClient, tableName: string ) {
-    const command = new ScanCommand( { TableName: tableName } );
+    async fetchTableData( tableName: string ) {
+        const command = new ScanCommand( { TableName: tableName } );
 
-    debug( `Fetching data for table: ${ tableName }` );
+        debug( `Fetching data for table: ${ tableName }` );
 
-    const response = await client.send( command );
+        const response = await this.client.send( command );
 
-    debug( `Data fetched for table ${ tableName }:`, response.Items );
+        debug( `Data fetched for table ${ tableName }:`, response.Items );
 
-    return response.Items ?? [];
-}
+        return response.Items ?? [];
+    }
 
-export async function dDBDropTable( client: DynamoDBClient, tableName: string ) {
-    const command = new DeleteTableCommand( { TableName: tableName } );
+    async dropTable( tableName: string ) {
+        const command = new DeleteTableCommand( { TableName: tableName } );
 
-    debug( `Dropping table: ${ tableName }...` );
+        debug( `Dropping table: ${ tableName }...` );
 
-    const response = await client.send( command );
+        const response = await this.client.send( command );
 
-    debug( `Table dropped successfully: ${ tableName }` );
+        debug( `Table dropped successfully: ${ tableName }` );
 
-    return response;
-}
+        return response;
+    }
 
-export async function dDBDropAllTables( client: DynamoDBClient ) {
-    try {
-        const tableNames = await dDBListTables( client );
-        if ( ! tableNames || tableNames.length === 0 ) {
-            debug( "No tables found to drop." );
-            return;
+    async dropAllTables() {
+        try {
+            const tableNames = await this.listTables();
+            if ( ! tableNames || tableNames.length === 0 ) {
+                debug( "No tables found to drop." );
+                return;
+            }
+
+            const results = await Promise.all( tableNames.map( name => this.dropTable( name ) ) );
+
+            debug( "All ta¬bles dropped successfully." );
+
+            return results;
+        } catch ( error ) {
+            console.error( "Failed to drop all tables:", error );
         }
-
-        const results = await Promise.all( tableNames.map( name => dDBDropTable( client, name ) ) );
-
-        debug( "All tables dropped successfully." );
-
-        return results;
-    } catch ( error ) {
-        console.error( "Failed to drop all tables:", error );
     }
 }
 
