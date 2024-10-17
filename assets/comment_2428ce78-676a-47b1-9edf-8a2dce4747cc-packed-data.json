@@ -1,0 +1,50 @@
+[
+    {
+        "id": {
+            "S": "599 Schaefer Spring"
+        },
+        "data": "{\"name\":{\"S\":\"600.43\"},\"avatar\":{\"S\":\"sadly\"},\"category\":{\"S\":\"5638 S Bridge Street\"},\"token\":{\"M\":{\"nestedKey\":{\"S\":\"Verus demo animus cattus adipiscor.\"}}}}"
+    },
+    {
+        "id": {
+            "S": "1e1b2cfd-925f-48a5-a348-7daf04baa104"
+        },
+        "data": "{\"status\":{\"S\":\"Kautzer Inc\"}}"
+    },
+    {
+        "id": {
+            "S": "Ford50@gmail.com"
+        },
+        "data": "{\"password\":{\"S\":\"Fiji\"}}"
+    },
+    {
+        "id": {
+            "S": "922acaba-05c4-4c8f-a1a2-b34547c3d72b"
+        },
+        "data": "{\"createdAt\":{\"S\":\"baggy nimble\"},\"name\":{\"S\":\"(498) 296-1540\"},\"title\":{\"BOOL\":true},\"group\":{\"N\":\"676348132501268\"},\"token\":{\"S\":\"withdrawal\"},\"updatedAt\":{\"S\":\"Chicken\"}}"
+    },
+    {
+        "id": {
+            "S": "262.19"
+        },
+        "data": "{\"password\":{\"M\":{\"nestedKey\":{\"S\":\"Delectus arbor tredecim somniculosus inflammatio pectus creator vobis depraedor coepi.\"}}},\"updatedAt\":{\"S\":\"deposit\"},\"status\":{\"L\":[{\"S\":\"consectetur\"},{\"N\":\"4861465305904559\"}]}}"
+    },
+    {
+        "id": {
+            "S": "06c5bec1-94a3-4634-a5fd-f26bda16b892"
+        },
+        "data": "{\"name\":{\"S\":\"Cotton\"},\"category\":{\"L\":[{\"S\":\"voluptate\"},{\"N\":\"5277282069750467\"}]},\"title\":{\"S\":\"Tasty Cotton Chicken\"},\"phone\":{\"S\":\"Ansel42@hotmail.com\"},\"status\":{\"S\":\"Jewelry\"}}"
+    },
+    {
+        "id": {
+            "S": "Port Adaburgh"
+        },
+        "data": "{\"title\":{\"S\":\"Refined Metal Keyboard\"}}"
+    },
+    {
+        "id": {
+            "S": "e9abdeb6-965d-45e4-9250-36e75d4596b1"
+        },
+        "data": "{\"createdAt\":{\"N\":\"0\"},\"password\":{\"S\":\"The SMS microchip is down, generate the mobile bandwidth so we can quantify the GB bus!\"},\"phone\":{\"S\":\"Deondre_Johnson19@yahoo.com\"},\"comment\":{\"S\":\"Auto Loan Account\"},\"title\":{\"M\":{\"nestedKey\":{\"S\":\"Pecco sono trepide aliqua sursum.\"}}},\"status\":{\"L\":[{\"S\":\"vobis\"},{\"N\":\"7791493633529933\"}]}}"
+    }
+]

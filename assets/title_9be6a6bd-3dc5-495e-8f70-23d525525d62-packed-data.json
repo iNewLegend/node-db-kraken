@@ -1,0 +1,56 @@
+[
+    {
+        "id": {
+            "S": "059ca9d9-c188-4d8a-8f88-5bd5482f4f07"
+        },
+        "data": "{\"comment\":{\"M\":{\"nestedKey\":{\"S\":\"Eum versus stabilis terreo degenero antepono sunt.\"}}},\"title\":{\"N\":\"1\"},\"updatedAt\":{\"S\":\"200.72\"}}"
+    },
+    {
+        "id": {
+            "S": "74867f0e-17cb-4c88-808f-e0c00140aecb"
+        },
+        "data": "{\"password\":{\"S\":\"Hessel, Hane and Fahey\"},\"comment\":{\"S\":\"Olson\"},\"category\":{\"BOOL\":false},\"phone\":{\"S\":\"Home Loan Account\"},\"token\":{\"S\":\"2024-08-11T08:22:53.202Z\"}}"
+    },
+    {
+        "id": {
+            "S": "276c7ad6-a126-4731-b352-09572c7de7b7"
+        },
+        "data": "{\"avatar\":{\"N\":\"1\"},\"category\":{\"S\":\"358.85\"},\"status\":{\"N\":\"3\"}}"
+    },
+    {
+        "id": {
+            "S": "d9197f0d-7868-403c-a6ff-4bdfdb53ef21"
+        },
+        "data": "{\"password\":{\"S\":\"5543 Donna Route\"},\"name\":{\"N\":\"4\"},\"title\":{\"S\":\"Ireland\"},\"category\":{\"S\":\"990.65\"},\"email\":{\"S\":\"881.93\"},\"updatedAt\":{\"S\":\"Savings Account\"},\"status\":{\"N\":\"536101159238676\"}}"
+    },
+    {
+        "id": {
+            "S": "a625c4ea-918a-48f9-b4da-875b3b453e76"
+        },
+        "data": "{\"avatar\":{\"S\":\"Elegant Wooden Keyboard\"},\"category\":{\"S\":\"2025-05-29T04:47:38.488Z\"},\"title\":{\"S\":\"French Guiana\"},\"updatedAt\":{\"S\":\"Granite\"},\"token\":{\"S\":\"Octavia\"}}"
+    },
+    {
+        "id": {
+            "S": "af60e6f4-0b22-4464-8ba2-56b1ff89ad70"
+        },
+        "data": "{\"password\":{\"S\":\"Electronics\"},\"name\":{\"S\":\"Ritchie, Kerluke and Collins\"},\"avatar\":{\"S\":\"East Winonamouth\"},\"category\":{\"S\":\"Pizza\"},\"email\":{\"S\":\"Use the primary XSS program, then you can compress the solid state hard drive!\"},\"updatedAt\":{\"N\":\"777232127756156\"},\"token\":{\"S\":\"Eritrea\"},\"status\":{\"S\":\"2024-10-17T22:08:59.409Z\"}}"
+    },
+    {
+        "id": {
+            "S": "2024-10-12T19:02:35.404Z"
+        },
+        "data": "{\"createdAt\":{\"S\":\"Walker\"},\"password\":{\"S\":\"forenenst opposite\"},\"name\":{\"N\":\"0.027776374945349125\"},\"comment\":{\"S\":\"Money Market Account\"},\"email\":{\"S\":\"2023-12-11T18:21:37.619Z\"},\"group\":{\"S\":\"above boastfully\"},\"updatedAt\":{\"S\":\"2024-10-18T06:50:57.311Z\"},\"status\":{\"S\":\"theca\"}}"
+    },
+    {
+        "id": {
+            "S": "fb268df3-5b2e-4798-8aac-5ff8789b10c2"
+        },
+        "data": "{\"password\":{\"S\":\"Tatum_Harris47@hotmail.com\"},\"name\":{\"BOOL\":true},\"title\":{\"S\":\"2024-10-18T08:24:42.682Z\"},\"email\":{\"S\":\"Investment Account\"},\"status\":{\"L\":[{\"S\":\"tonsor\"},{\"N\":\"5738118479338037\"}]},\"token\":{\"S\":\"Shanahan\"}}"
+    },
+    {
+        "id": {
+            "S": "29eb8f73-9ddd-4b56-8b9a-285c00ec36ba"
+        },
+        "data": "{\"password\":{\"S\":\"Samanta_Conroy@gmail.com\"},\"name\":{\"S\":\"Auto Loan Account\"},\"avatar\":{\"M\":{\"nestedKey\":{\"S\":\"Teres administratio aestus tertius.\"}}},\"category\":{\"S\":\"Checking Account\"},\"title\":{\"S\":\"981.40\"},\"email\":{\"N\":\"642958319466213\"},\"token\":{\"S\":\"433.02\"},\"status\":{\"S\":\"Rudolph_Pfeffer22@yahoo.com\"}}"
+    }
+]

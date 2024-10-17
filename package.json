@@ -9,7 +9,8 @@
         "tsx:debug": "tsx src/index.ts",
         "bun:debug": "bun --bun --inspect-brk run src/index.ts",
         "bun:get-remote-tables": "bun --bun run src/get-tables-from-remote.ts",
-        "bun:db-fresh-start": "bun --bun run src/index.ts --db-fresh-start"
+        "bun:db-fresh-start": "bun --bun run src/index.ts --db-fresh-start",
+        "bun:db-seed": "bun --bun run src/db-seed-faker.ts 3 10"
     },
     "dependencies": {
         "@aws-sdk/client-dynamodb": "3.670.0",
@@ -17,10 +18,11 @@
         "node-fetch": "^3.3.2"
     },
     "devDependencies": {
-        "tsx": "latest",
+        "@faker-js/faker": "^9.0.3",
         "@types/bun": "latest",
         "@types/node": "^22.7.5",
-        "@types/tar": "^6.1.13"
+        "@types/tar": "^6.1.13",
+        "tsx": "latest"
     },
     "peerDependencies": {
         "typescript": "^5.0.0"
