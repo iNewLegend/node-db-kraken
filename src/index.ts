@@ -1,12 +1,7 @@
-import { CreateTableCommand, DynamoDBClient, ListTablesCommand } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import * as fs from "node:fs";
+import { DynamoDBLocalServer } from "./dynamo-db/dynamo-db-server";
 
-import {
-    dDBDownload,
-    dDBEnsurePortActivity,
-    dDBHandleTermination,
-    dDBLaunch,
-} from "./dynamo-db/dynamo-db-server";
 import {
     dDB0GetTableSchema,
     dDBCreateTablesWithData,
@@ -26,19 +21,18 @@ const client = new DynamoDBClient( {
 
 
 async function lunchDynamoDBLocal() {
-    await dDBDownload();
+    const dynamoDBLocalServer = new DynamoDBLocalServer();
 
-    const dbProcess = await dDBLaunch();
+    await dynamoDBLocalServer.downloadInternals();
+
+    const dbProcess = await dynamoDBLocalServer.start();
 
     console.log( "DynamoDB Local launched with PID:", dbProcess.pid );
 
-    await dDBEnsurePortActivity( 8000, 3, 3000 );
-
-    dDBHandleTermination( dbProcess.pid! );
+    await dynamoDBLocalServer.waitForServerListening();
 
     return dbProcess;
 }
-
 
 async function processArgv() {
     if ( process.argv.includes( "--db-fresh-start" ) ) {
@@ -93,11 +87,11 @@ async function processAllTables() {
     }
 }
 
-await lunchDynamoDBLocal();
+const serverProcess = await lunchDynamoDBLocal();
 
 await processArgv();
 
 await processAllTables().catch( console.error )
 
-// Send SIGTERM
-process.kill( process.pid, "SIGTERM" );
+serverProcess.kill( "SIGTERM" );
+
