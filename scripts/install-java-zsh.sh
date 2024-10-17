@@ -58,18 +58,19 @@ is_java_functional() {
   fi
 }
 
-# The 'brew' command must be available
-if ! type brew &> /dev/null ; then
-  echo "Homebrew is not installed. Please install Homebrew first."
-  exit 1
-fi
-
 # Check if Java is already installed and functional
 if is_java_functional; then
   echo "Java $REQUIRED_JAVA_VERSION or higher is already installed and functional."
   exit 0
 else
   echo "Java $REQUIRED_JAVA_VERSION is not installed or not functional. Installing openjdk@$REQUIRED_JAVA_VERSION..."
+
+  # The 'brew' command must be available
+  if ! type brew &> /dev/null ; then
+    echo "Homebrew is not installed. Please install Homebrew first."
+    exit 1
+  fi
+
   brew install openjdk@$REQUIRED_JAVA_VERSION
   brew link openjdk@$REQUIRED_JAVA_VERSION
 

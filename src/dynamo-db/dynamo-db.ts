@@ -35,7 +35,7 @@ function validateChecksum( filePath: string, expectedChecksum: string ): Promise
                 reject( `Checksum mismatch: expected ${ expectedChecksum }, but got ${ calculatedChecksum }` );
             }
         } catch ( error ) {
-            reject( `Error calculating checksum: ${ error.message }` );
+            reject( `Error calculating checksum` );
         }
     } );
 }
