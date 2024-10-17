@@ -1,7 +1,7 @@
 import { CreateTableCommand, DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import type { CreateTableCommandInput } from "@aws-sdk/client-dynamodb/dist-types/commands/CreateTableCommand";
 import { faker } from "@faker-js/faker";
-import { dDBDownload, dDBEnsurePortActivity, dDBHandleTermination, dDBLaunch } from "./dynamo-db/dynamo-db-server";
+import { DynamoDBLocalServer } from "./dynamo-db/dynamo-db-server";
 
 const client = new DynamoDBClient( {
     credentials: {
@@ -13,15 +13,15 @@ const client = new DynamoDBClient( {
 } );
 
 async function lunchDynamoDBLocal() {
-    await dDBDownload();
+    const dynamoDBLocalServer = new DynamoDBLocalServer();
 
-    const dbProcess = await dDBLaunch();
+    await dynamoDBLocalServer.downloadInternals();
+
+    const dbProcess = await dynamoDBLocalServer.start();
 
     console.log( "DynamoDB Local launched with PID:", dbProcess.pid );
 
-    await dDBEnsurePortActivity( 8000, 3, 3000 );
-
-    dDBHandleTermination( dbProcess.pid! );
+    await dynamoDBLocalServer.waitForServerListening();
 
     return dbProcess;
 }
