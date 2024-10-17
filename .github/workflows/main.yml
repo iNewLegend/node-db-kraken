@@ -1,0 +1,11 @@
+name: Main workflow
+
+on: [ push, pull_request ]
+
+jobs:
+  start-react-packages-workflow:
+    uses: ./.github/workflows/simple-run.yml
+    with:
+      runs-on: ubuntu-latest
+    secrets:
+      token: ${{ secrets.GITHUB_TOKEN }}
