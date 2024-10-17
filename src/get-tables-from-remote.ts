@@ -1,5 +1,5 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { dDBListAndSaveTables } from "./dynamo-db/dynamo-db-table";
+import { dDBListAndSaveTables } from "./dynamo-db/dynamo-db-util.ts";
 
 const client = new DynamoDBClient( {
     region: "us-east-1",

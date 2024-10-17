@@ -3,12 +3,12 @@ import * as fs from "node:fs";
 import { DynamoDBLocalServer } from "./dynamo-db/dynamo-db-server";
 
 import {
-    dDB0GetTableSchema,
+    dDBGetTableSchema,
     dDBCreateTablesWithData,
     dDBDropAllTables,
     dDBFetchTableData,
     dDBListTables
-} from "./dynamo-db/dynamo-db-table";
+} from "./dynamo-db/dynamo-db-util";
 
 const client = new DynamoDBClient( {
     credentials: {
@@ -95,7 +95,7 @@ async function processAllTables() {
     for ( const tableName of tableNames ) {
         console.log( `Processing table: ${ tableName }` );
 
-        const partitionKey = await dDB0GetTableSchema( client, tableName );
+        const partitionKey = await dDBGetTableSchema( client, tableName );
         const tableData = await dDBFetchTableData( client, tableName );
 
         const packedData = transformToPackedMode( tableData, partitionKey );
