@@ -9,7 +9,7 @@
         "tsx:debug": "tsx src/index.ts",
         "bun:debug": "bun --bun --inspect-brk run src/index.ts",
         "bun:get-remote-tables": "bun --bun run src/get-tables-from-remote.ts",
-        "bun:fresh-start": "bun --bun run src/index.ts --fresh-start"
+        "bun:db-fresh-start": "bun --bun run src/index.ts --db-fresh-start"
     },
     "dependencies": {
         "@aws-sdk/client-dynamodb": "3.670.0",

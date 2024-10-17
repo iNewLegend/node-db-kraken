@@ -300,5 +300,4 @@ export function dDBHandleTermination( processPid: number ) {
 
     process.on( "SIGINT", terminate );
     process.on( "SIGTERM", terminate );
-
 }

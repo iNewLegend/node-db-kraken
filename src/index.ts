@@ -1,4 +1,5 @@
 import { CreateTableCommand, DynamoDBClient, ListTablesCommand } from "@aws-sdk/client-dynamodb";
+import * as fs from "node:fs";
 
 import {
     dDBDownload,
@@ -8,7 +9,7 @@ import {
 } from "./dynamo-db/dynamo-db-server";
 import {
     dDB0GetTableSchema,
-    dDBCreateTables, dDBCreateTablesWithData,
+    dDBCreateTablesWithData,
     dDBDropAllTables,
     dDBFetchTableData,
     dDBListTables
@@ -38,22 +39,23 @@ async function lunchDynamoDBLocal() {
     return dbProcess;
 }
 
-await lunchDynamoDBLocal();
 
-if ( process.argv.includes( "--fresh-start" ) ) {
-    await dDBDropAllTables( client )
+async function processArgv() {
+    if ( process.argv.includes( "--db-fresh-start" ) ) {
+        await dDBDropAllTables( client )
+    }
 }
 
+async function handleTableCreation() {
+    let listTableResult = ( await dDBListTables( client ) ) !;
 
-// List exist tables to ensure connection
-let listTableResult = ( await dDBListTables( client ) ) !;
-
-if ( ! listTableResult?.length ) {
-    await dDBCreateTablesWithData( client, process.cwd() + "/tables.json" );
-    listTableResult = ( await dDBListTables( client ) ) !; // Re-fetch the list after table creation
+    if ( ! listTableResult?.length ) {
+        await dDBCreateTablesWithData( client, process.cwd() + "/tables.json" );
+        listTableResult = ( await dDBListTables( client ) ) !; // Re-fetch the list after table creation
+    }
+    return listTableResult;
 }
 
-// Function to transform data to packed mode
 function transformToPackedMode( data: any, partitionKey: string ) {
     return data.map( ( item: any ) => {
         const partitionValue = item[ partitionKey ];
@@ -67,9 +69,13 @@ function transformToPackedMode( data: any, partitionKey: string ) {
     } );
 }
 
-// Main function to process all tables
 async function processAllTables() {
-    const tableNames = listTableResult;
+    const tableNames = await handleTableCreation();
+
+    // Ensure `assets` directory exists.
+    if ( ! fs.existsSync( process.cwd() + "/assets" ) ) {
+        fs.mkdirSync( process.cwd() + "/assets" );
+    }
 
     for ( const tableName of tableNames ) {
         console.log( `Processing table: ${ tableName }` );
@@ -77,12 +83,21 @@ async function processAllTables() {
         const partitionKey = await dDB0GetTableSchema( client, tableName );
         const tableData = await dDBFetchTableData( client, tableName );
 
-        console.log( `Table Data for table ${ tableName }:`, JSON.stringify( tableData, null, 2 ) );
-
         const packedData = transformToPackedMode( tableData, partitionKey );
 
-        console.log( `Packed Data for table ${ tableName }:`, JSON.stringify( packedData, null, 2 ) );
+        const packedDataFilePath = process.cwd() + `/assets/${ tableName }-packed-data.json`;
+
+        fs.writeFileSync( packedDataFilePath, JSON.stringify( packedData, null, 4 ) );
+
+        console.log( `Packed data saved to file: ${ packedDataFilePath }` );
     }
 }
 
-processAllTables().catch( console.error );
+await lunchDynamoDBLocal();
+
+await processArgv();
+
+await processAllTables().catch( console.error )
+
+// Send SIGTERM
+process.kill( process.pid, "SIGTERM" );
