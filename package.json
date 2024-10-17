@@ -6,7 +6,7 @@
         "preinstall": "./scripts/install-java-runner.sh",
         "clean": "rm -rf node_modules bun.lockb package-lock.json",
         "bun:start": "bun --bun run src/index.ts",
-        "tsx:debug": "tsx src/index.ts",
+        "tsx:debug": "NODE_DEBUG=\"dynamodb-local:*\"  tsx --trace-uncaught src/index.ts --db-internals-path /tmp/dynamodb-local/",
         "bun:debug": "bun --bun --inspect-brk run src/index.ts",
         "bun:get-remote-tables": "bun --bun run src/get-tables-from-remote.ts",
         "bun:db-fresh-start": "bun --bun run src/index.ts --db-fresh-start",

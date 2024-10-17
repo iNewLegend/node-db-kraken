@@ -19,9 +19,12 @@ const client = new DynamoDBClient( {
     endpoint: "http://localhost:8000",
 } );
 
+let dbInternalsExtractPath: string | undefined;
 
 async function lunchDynamoDBLocal() {
-    const dynamoDBLocalServer = new DynamoDBLocalServer();
+    const dynamoDBLocalServer = new DynamoDBLocalServer( dbInternalsExtractPath ? {
+        packageExtractPath: dbInternalsExtractPath,
+    } : {} );
 
     await dynamoDBLocalServer.downloadInternals();
 
@@ -34,7 +37,25 @@ async function lunchDynamoDBLocal() {
     return dbProcess;
 }
 
-async function processArgv() {
+function handleArgvBeforeStart() {
+    if ( process.argv.includes( "--db-internals-path" ) ) {
+        const index = process.argv.indexOf( "--db-internals-path" );
+        if ( index === -1 ) {
+            return;
+        }
+
+        const nextValue = process.argv[ index + 1 ];
+
+        if ( nextValue ) {
+            dbInternalsExtractPath = nextValue;
+        } else {
+            console.error( "Missing value for --db-internals-path" );
+            process.exit( 1 );
+        }
+    }
+}
+
+async function processArgvAfterStart() {
     if ( process.argv.includes( "--db-fresh-start" ) ) {
         await dDBDropAllTables( client )
     }
@@ -87,9 +108,11 @@ async function processAllTables() {
     }
 }
 
+handleArgvBeforeStart()
+
 const serverProcess = await lunchDynamoDBLocal();
 
-await processArgv();
+await processArgvAfterStart();
 
 await processAllTables().catch( console.error )
 

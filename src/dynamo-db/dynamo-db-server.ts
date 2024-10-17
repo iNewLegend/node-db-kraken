@@ -60,7 +60,7 @@ export class DynamoDBLocalServer {
         try {
             if ( fs.readdirSync( this.args.packageExtractPath ).length === 0 ) {
                 // Remove the LOCAL_DIR if it's empty
-                fs.rmdirSync( this.args.packageExtractPath, { recursive: true } );
+                fs.rmSync( this.args.packageExtractPath, { recursive: true } );
             }
         } catch ( e ) {
         }
@@ -87,7 +87,7 @@ export class DynamoDBLocalServer {
                     reject( `Checksum mismatch: expected ${ expectedChecksum }, but got ${ calculatedChecksum }` );
                 }
             } catch ( error ) {
-                reject( `Error calculating checksum` );
+                reject( `Error calculating checksum ${ util.inspect( error ) }` );
             }
         } );
     }
@@ -113,7 +113,7 @@ export class DynamoDBLocalServer {
         } )
     }
 
-    private async downloadWithProgress( url: string = this.args.packageURL, targetPath: string = this.args.packageExtractPath ) {
+    private async downloadWithProgress( url: string = this.args.packageURL, targetPath: string = this.args.packageTmpPath ) {
         const res = await fetch( url );
         if ( ! res.ok ) {
             throw new Error( `Failed to download DynamoDB Local: ${ res.statusText }` );
@@ -139,6 +139,8 @@ export class DynamoDBLocalServer {
             } );
 
             res.body.on( 'end', () => {
+                process.stdout.write( "\n" );
+
                 fileStream.end();
             } );
 
@@ -168,17 +170,19 @@ export class DynamoDBLocalServer {
             }
 
             if ( result === "re-extract" ) {
-                return this.extractPackage( this.args.packageExtractPath );
+                return this.extractPackage( this.args.packageTmpPath );
             }
 
             throw new Error( "Something went wrong" );
         }
 
+        const dynamoInternalsJAR = path.join( this.args.packageExtractPath, 'DynamoDBLocal.jar' );
+
         let attempts = 0;
         while ( attempts < retryCount ) {
             try {
                 // Ensure the output directory exists and check if DynamoDB Local is already installed
-                if ( fs.existsSync( path.join( this.args.packageExtractPath ) ) ) {
+                if ( fs.existsSync( path.join( dynamoInternalsJAR ) ) ) {
                     return;
                 }
 
