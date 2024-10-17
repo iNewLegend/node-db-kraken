@@ -5,7 +5,7 @@ import {
     dDBEnsurePortActivity,
     dDBHandleTermination,
     dDBLaunch,
-} from "./dynamo-db/dynamo-db";
+} from "./dynamo-db/dynamo-db-server";
 import {
     dDB0GetTableSchema,
     dDBCreateTables, dDBCreateTablesWithData,

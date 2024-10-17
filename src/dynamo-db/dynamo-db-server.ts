@@ -14,7 +14,9 @@ const TEMP_TAR_FILE = path.join( "/tmp", "dynamodb_local_latest.tar.gz" );
 const DYNAMO_DB_LOCAL_TAR = path.join( DYNAMO_DB_LOCAL_DIR, 'dynamodb_local_latest.tar.gz' );
 const DYNAMODB_URL = 'https://d1ni2b6xgvw0s0.cloudfront.net/v2.x/dynamodb_local_latest.tar.gz';
 
-function calculateChecksum( filePath: string ): Promise<string> {
+const debug = util.debug( 'dynamodb-local:server' );
+
+function dDBCalculateChecksum( filePath: string ): Promise<string> {
     return new Promise( ( resolve, reject ) => {
         const hash = crypto.createHash( 'sha256' );
         const stream = fs.createReadStream( filePath );
@@ -25,10 +27,10 @@ function calculateChecksum( filePath: string ): Promise<string> {
     } );
 }
 
-function validateChecksum( filePath: string, expectedChecksum: string ): Promise<void> {
+function dDBValidateChecksum( filePath: string, expectedChecksum: string ): Promise<void> {
     return new Promise( async ( resolve, reject ) => {
         try {
-            const calculatedChecksum = await calculateChecksum( filePath );
+            const calculatedChecksum = await dDBCalculateChecksum( filePath );
             if ( calculatedChecksum === expectedChecksum ) {
                 resolve();
             } else {
@@ -40,7 +42,11 @@ function validateChecksum( filePath: string, expectedChecksum: string ): Promise
     } );
 }
 
-function extractDynamoDBLocal( file: string ) {
+function dDBExtractDynamoDBLocal( file: string ) {
+    if ( ! fs.existsSync( DYNAMO_DB_LOCAL_DIR ) ) {
+        fs.mkdirSync( DYNAMO_DB_LOCAL_DIR, { recursive: true } );
+    }
+
     return new Promise<void>( ( resolve, reject ) => {
         tar.x( {
             file,
@@ -49,14 +55,14 @@ function extractDynamoDBLocal( file: string ) {
             if ( error ) {
                 reject( `Extraction error: ${ error.message }` );
             } else {
-                console.log( `Extraction completed.` );
+                debug( `Extraction completed.` );
                 resolve();
             }
         } );
     } );
 }
 
-async function downloadFileWithProgress( url: string, dest: string ): Promise<void> {
+async function dDBDownloadFileWithProgress( url: string, dest: string ): Promise<void> {
     const res = await fetch( url );
     if ( ! res.ok ) {
         throw new Error( `Failed to download DynamoDB Local: ${ res.statusText }` );
@@ -86,7 +92,7 @@ async function downloadFileWithProgress( url: string, dest: string ): Promise<vo
         } );
 
         fileStream.on( 'finish', () => {
-            console.log( '\nDownload completed.' );
+            debug( '\nDownload completed.' );
             resolve();
         } );
 
@@ -108,7 +114,7 @@ export async function dDBDownload( retryCount = 3 ) {
 
     // If file exist in /tmp directory and checksum matches, and the target directory is empty re-extract
     if ( fs.existsSync( TEMP_TAR_FILE ) ) {
-        const result = await validateChecksum( TEMP_TAR_FILE, DYNAMO_DB_LOCAL_CHECKSUM )
+        const result = await dDBValidateChecksum( TEMP_TAR_FILE, DYNAMO_DB_LOCAL_CHECKSUM )
             .then( async () => {
                     return "re-extract";
                 }, () => {
@@ -124,7 +130,7 @@ export async function dDBDownload( retryCount = 3 ) {
         }
 
         if ( result === "re-extract" ) {
-            return extractDynamoDBLocal( TEMP_TAR_FILE );
+            return dDBExtractDynamoDBLocal( TEMP_TAR_FILE );
         }
 
         throw new Error( "Something went wrong" );
@@ -138,17 +144,13 @@ export async function dDBDownload( retryCount = 3 ) {
                 return;
             }
 
-            await downloadFileWithProgress( DYNAMODB_URL, TEMP_TAR_FILE );
+            await dDBDownloadFileWithProgress( DYNAMODB_URL, TEMP_TAR_FILE );
 
-            console.log( "" )
+            debug( "" )
 
-            await validateChecksum( TEMP_TAR_FILE, DYNAMO_DB_LOCAL_CHECKSUM );
+            await dDBValidateChecksum( TEMP_TAR_FILE, DYNAMO_DB_LOCAL_CHECKSUM );
 
-            if ( ! fs.existsSync( DYNAMO_DB_LOCAL_DIR ) ) {
-                fs.mkdirSync( DYNAMO_DB_LOCAL_DIR, { recursive: true } );
-            }
-
-            await extractDynamoDBLocal( TEMP_TAR_FILE );
+            await dDBExtractDynamoDBLocal( TEMP_TAR_FILE );
         } catch ( error ) {
             console.error( `Attempt ${ attempts + 1 }/${ retryCount } failed: ${ util.inspect( error, { depth: null } ) }` );
             attempts++;
@@ -181,12 +183,12 @@ export async function dDBLaunch( port = 8000, sharedDb = false, args: string[] =
         javaArgs.push( '-sharedDb' );
     }
 
-    console.log( `Launching DynamoDB Local with arguments: ${ javaArgs.join( ' ' ) }` );
+    debug( `Launching DynamoDB Local with arguments: ${ javaArgs.join( ' ' ) }` );
 
     const dynamoDBLocalProcess = spawn( 'java', javaArgs, { cwd: DYNAMO_DB_LOCAL_DIR } );
 
     dynamoDBLocalProcess.stdout.on( 'data', ( data ) => {
-        console.log( `DDBServer: ${ data.toString().split( '\n' ).join( '\nDDBServer: ' ) }` );
+        debug( `DDBServer: ${ data.toString().split( '\n' ).join( '\nDDBServer: ' ) }` );
     } );
 
     dynamoDBLocalProcess.stderr.on( 'data', ( data ) => {
@@ -197,7 +199,7 @@ export async function dDBLaunch( port = 8000, sharedDb = false, args: string[] =
         if ( code !== 0 ) {
             console.error( `DynamoDB Local process exited with code ${ code }` );
         } else {
-            console.log( 'DynamoDB Local stopped gracefully' );
+            debug( 'DynamoDB Local stopped gracefully' );
         }
     } );
 
@@ -214,7 +216,7 @@ export async function dDBStop( options: { port: number } | { pid: number } ) {
             if ( killError ) {
                 console.error( `Error stopping process with PID ${ pid }:`, killError );
             } else {
-                console.log( `Successfully stopped ${ port ? `process on port ${ port }` : '' } (PID: ${ pid })` );
+                debug( `Successfully stopped ${ port ? `process on port ${ port }` : '' } (PID: ${ pid })` );
             }
         } );
     }
@@ -228,13 +230,13 @@ export async function dDBStop( options: { port: number } | { pid: number } ) {
 
     exec( findProcessCmd, ( error, stdout ) => {
         if ( error ) {
-            // console.error(`Error finding process on port ${port}:`, error);
+            debug( `Error finding process on port ${ port }:`, error );
             return;
         }
 
         const pid = stdout.trim();
         if ( ! pid ) {
-            console.log( `No process found running on port ${ port }` );
+            debug( `No process found running on port ${ port }` );
             return;
         }
         killProcessByPID( pid );
@@ -248,7 +250,7 @@ export async function dDBEnsurePortActivity( port = 8000, retryCount = 3, timeou
             const socket = new net.Socket();
 
             socket.connect( 8000, "localhost", () => {
-                console.log( `Port ${ port } is active` );
+                debug( `Port ${ port } is active` );
                 socket.destroy();
                 resolve( true );
             } );
@@ -269,7 +271,7 @@ export async function dDBEnsurePortActivity( port = 8000, retryCount = 3, timeou
 
 
     for ( let i = 0 ; i < ( retryCount + 1 ) ; i++ ) {
-        console.log( `Waiting for port ${ port } to become active... Attempt ${ i + 1 } of ${ retryCount }` );
+        debug( `Waiting for port ${ port } to become active... Attempt ${ i + 1 } of ${ retryCount }` );
 
         await new Promise( ( resolve ) => setTimeout( resolve, timeout ) );
 
@@ -284,9 +286,15 @@ export async function dDBEnsurePortActivity( port = 8000, retryCount = 3, timeou
     throw new Error( `Port ${ port } is not active after ${ retryCount } attempts` );
 }
 
+let isTerminateProcessing = false;
+
 export function dDBHandleTermination( processPid: number ) {
     async function terminate() {
-        console.log( "Shutting down..." );
+        if ( isTerminateProcessing ) {
+            return;
+        }
+        isTerminateProcessing = true;
+        console.info( "\nShutting down..." );
         await dDBStop( { pid: processPid } );
     }
 
