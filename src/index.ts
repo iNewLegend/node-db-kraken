@@ -32,7 +32,7 @@ async function lunchDynamoDBLocal() {
 
     console.log( "DynamoDB Local launched with PID:", dbProcess.pid );
 
-    await dDBEnsurePortActivity();
+    await dDBEnsurePortActivity( 8000, 3, 3000 );
 
     dDBHandleTermination( dbProcess.pid! );
 
