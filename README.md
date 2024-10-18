@@ -1,18 +1,26 @@
 # node-dynamodb-connect
 
-To install dependencies:
+### Install bun
 
 ```bash
 npm install bun -g
 ```
 
-To run:
+### Install dependencies:
 
 ```bash
 bun install
 ```
 
+### Generate tables from seed
+
 ```bash
-bun run bun:start
+bun run bun:db-seed <number-of-tables> <number-of-items-per-table>
+```
+
+### Export packed data to `assets` folder
+
+```bash
+bun run bun:db-export-packed-data
 ```
 

@@ -1,40 +1,118 @@
 import {
     CreateTableCommand,
-    DeleteTableCommand,
+    DeleteTableCommand, type DeleteTableCommandOutput,
     DescribeTableCommand,
-    DynamoDBClient,
-    ListTablesCommand,
+    DynamoDBClient, type GlobalSecondaryIndex,
+    ListTablesCommand, type LocalSecondaryIndex, type ProvisionedThroughput,
     PutItemCommand,
     ScanCommand
 } from "@aws-sdk/client-dynamodb";
 
 import type { TableDescription } from "@aws-sdk/client-dynamodb/dist-types";
+import type { CreateTableCommandInput } from "@aws-sdk/client-dynamodb/dist-types/commands/CreateTableCommand";
+import type { ListTablesInput } from "@aws-sdk/client-dynamodb/dist-types/models/models_0";
 
 import * as fs from 'fs/promises';
 import * as util from "node:util";
+
+util.inspect.defaultOptions.depth = 10;
 
 const debug = util.debug( 'dynamodb-local:util' );
 
 export class DynamoDBUtil {
     private client: DynamoDBClient;
 
+    public static local() {
+        const client = new DynamoDBClient( {
+            credentials: {
+                accessKeyId: "fakeMyKeyId",
+                secretAccessKey: "fakeSecretAccessKey"
+            },
+            region: "fakeRegion",
+            endpoint: "http://localhost:8000",
+        } );
+
+        return new DynamoDBUtil( client );
+    }
+
     public constructor( client: DynamoDBClient ) {
         this.client = client;
     }
 
-    private async readFileAndParseJSON( filePath: string ) {
+    private convertTableDescriptionToCreateTableInput(
+        tableDescription: TableDescription
+    ) {
+        const provisionedThroughput: ProvisionedThroughput | undefined = tableDescription.ProvisionedThroughput
+            ? {
+                ReadCapacityUnits: tableDescription.ProvisionedThroughput.ReadCapacityUnits!,
+                WriteCapacityUnits: tableDescription.ProvisionedThroughput.WriteCapacityUnits!,
+            }
+            : undefined;
+
+        const globalSecondaryIndexes: GlobalSecondaryIndex[] | undefined =
+            tableDescription.GlobalSecondaryIndexes?.map( index => ( {
+                IndexName: index.IndexName!,
+                KeySchema: index.KeySchema,
+                Projection: index.Projection,
+                ProvisionedThroughput: index.ProvisionedThroughput
+                    ? {
+                        ReadCapacityUnits: index.ProvisionedThroughput.ReadCapacityUnits!,
+                        WriteCapacityUnits: index.ProvisionedThroughput.WriteCapacityUnits!,
+                    }
+                    : undefined,
+            } ) );
+
+        const localSecondaryIndexes: LocalSecondaryIndex[] | undefined =
+            tableDescription.LocalSecondaryIndexes?.map( index => ( {
+                IndexName: index.IndexName!,
+                KeySchema: index.KeySchema,
+                Projection: index.Projection,
+            } ) );
+
+        return {
+            TableName: tableDescription.TableName,
+            AttributeDefinitions: tableDescription.AttributeDefinitions,
+            KeySchema: tableDescription.KeySchema,
+            ProvisionedThroughput: provisionedThroughput,
+            GlobalSecondaryIndexes: globalSecondaryIndexes,
+            LocalSecondaryIndexes: localSecondaryIndexes,
+            StreamSpecification: tableDescription.StreamSpecification,
+            SSESpecification: tableDescription.SSEDescription
+                ? {
+                    Enabled: tableDescription.SSEDescription.Status === 'ENABLED',
+                    SSEType: tableDescription.SSEDescription.SSEType,
+                    KMSMasterKeyId: tableDescription.SSEDescription.KMSMasterKeyArn,
+                }
+                : undefined,
+            BillingMode: tableDescription.BillingModeSummary
+                ? tableDescription.BillingModeSummary.BillingMode
+                : undefined,
+            // Remove Tags property as it does not exist on TableDescription
+        };
+    }
+
+
+    private async loadTables( filePath: string ) {
         const fileContent = await fs.readFile( filePath, 'utf-8' );
         return JSON.parse( fileContent );
+    }
+
+    private async saveTables( tables: TableDescription[], filePath: string ) {
+        debug( "Saving tables to file:", filePath );
+
+        await fs.writeFile( filePath, JSON.stringify( tables, null, 2 ) );
+
+        debug( "Tables saved successfully." );
     }
 
     private convertToUint8Array( data: any ): Uint8Array {
         return new Uint8Array( Object.values( data ) );
     }
 
-    async listTables() {
-        const command = new ListTablesCommand( {} );
+    async list( input: ListTablesInput = {} ) {
+        const command = new ListTablesCommand( input );
 
-        debug( "Listing all tables..." );
+        debug( "Listing tables...", input );
 
         const response = await this.client.send( command );
 
@@ -43,7 +121,7 @@ export class DynamoDBUtil {
         return response.TableNames;
     }
 
-    async describeTable( tableName: string ) {
+    async describe( tableName: string ) {
         const command = new DescribeTableCommand( { TableName: tableName } );
 
         debug( `Describing table: ${ tableName }...` );
@@ -55,57 +133,18 @@ export class DynamoDBUtil {
         return response.Table;
     }
 
-    async saveTables( tables: TableDescription[], filePath: string ) {
-        debug( "Saving tables to file:", filePath );
-
-        await fs.writeFile( filePath, JSON.stringify( tables, null, 2 ) );
-
-        debug( "Tables saved successfully." );
-    }
-
-    async listAndSaveTables( filePath: string ) {
-        try {
-            const tableNames = await this.listTables();
-
-            if ( ! tableNames || tableNames.length === 0 ) {
-                debug( "No tables found to list and save." );
-                return;
-            }
-
-            const tableDetails = await Promise.all( tableNames.map( async ( tableName ) => {
-                const description = await this.describeTable( tableName );
-                const data = await this.fetchTableData( tableName );
-
-                if ( ! description || ! data ) {
-                    throw new Error( `Failed to get table description or data for table ${ tableName }` );
-                }
-
-                return {
-                    ... description,
-                    data
-                };
-            } ) );
-
-            debug( "Saving table descriptions and data to file:", filePath );
-
-            await this.saveTables( tableDetails, filePath );
-
-            debug( "Tables with data saved successfully." );
-        } catch ( error ) {
-            console.error( "Failed to list and save tables:", error );
-        }
-    }
-
-    async insertDataIntoTable( tableName: string, items: any[] ) {
+    async insert( tableName: string, items: any[] ) {
         for ( const item of items ) {
-            for ( const key in item ) {
-                if ( item[ key ].B ) {
-                    item[ key ].B = this.convertToUint8Array( item[ key ].B );
-                }
-                if ( item[ key ].BS ) {
-                    item[ key ].BS = item[ key ].BS.map( this.convertToUint8Array );
-                }
-            }
+            // for ( const key in item ) {
+            //     if ( item[ key ].B ) {
+            //         item[ key ].B = this.convertToUint8Array( item[ key ].B );
+            //     }
+            //     if ( item[ key ].BS ) {
+            //         item[ key ].BS = item[ key ].BS.map( this.convertToUint8Array );
+            //     }
+            // }
+            debug( `Inserting item into ${ tableName }:`, item );
+
             const command = new PutItemCommand( { TableName: tableName, Item: item } );
 
             await this.client.send( command );
@@ -114,53 +153,69 @@ export class DynamoDBUtil {
         }
     }
 
-    async createTables( filePath: string ) {
-        try {
-            const tables = await this.readFileAndParseJSON( filePath );
+    async export( filePath: string ) {
+        const tableNames = await this.list();
 
-            for ( const table of tables ) {
-                const createTableParams = {
-                    TableName: table.TableName,
-                    AttributeDefinitions: table.AttributeDefinitions,
-                    KeySchema: table.KeySchema,
-                    ProvisionedThroughput: table.ProvisionedThroughput,
-                    StreamSpecification: table.StreamSpecification,
-                    TableClass: table.TableClassSummary?.TableClass
-                };
+        if ( ! tableNames || tableNames.length === 0 ) {
+            debug( "No tables found to list and save." );
+            return;
+        }
 
-                debug( "Creating table:", table.TableName );
+        const tableDetails = await Promise.all( tableNames.map( async ( tableName ) => {
+            const description = await this.describe( tableName );
+            const data = await this.fetch( tableName );
 
-                const command = new CreateTableCommand( createTableParams );
-                const response = await this.client.send( command );
-
-                debug( `Table ${ table.TableName } created successfully.`, response.TableDescription );
+            if ( ! description || ! data ) {
+                throw new Error( `Failed to get table description or data for table ${ tableName }` );
             }
-        } catch ( error ) {
-            console.error( "Failed to create tables:", error );
+
+            return {
+                ... description,
+                data
+            };
+        } ) );
+
+        debug( "Saving table descriptions and data to file:", filePath );
+
+        await this.saveTables( tableDetails, filePath );
+
+        debug( "Tables with data saved successfully." );
+    }
+
+    async importSchema( filePath: string ) {
+        const tables = await this.loadTables( filePath );
+
+        for ( const table of tables ) {
+            await this.create( table );
         }
     }
 
-    async createTablesWithData( filePath: string ) {
-        try {
-            await this.createTables( filePath );
+    async import( filePath: string ) {
+        await this.importSchema( filePath );
 
-            const tables = await this.readFileAndParseJSON( filePath );
+        const tables = await this.loadTables( filePath );
 
-            for ( const table of tables ) {
-                if ( table.data && table.data.length > 0 ) {
-                    debug( `Inserting data into ${ table.TableName }` );
+        for ( const table of tables ) {
+            if ( table.data && table.data.length > 0 ) {
+                debug( `Inserting data into ${ table.TableName }` );
 
-                    await this.insertDataIntoTable( table.TableName, table.data );
+                await this.insert( table.TableName, table.data );
 
-                    debug( `Data inserted into ${ table.TableName }` );
-                }
+                debug( `Data inserted into ${ table.TableName }` );
             }
-        } catch ( error ) {
-            console.error( "Failed to create tables and insert data:", error );
         }
     }
 
-    async getTableSchema( tableName: string ) {
+    public async create( table: TableDescription ) {
+        debug( "Creating table:", table.TableName );
+
+        const command = new CreateTableCommand( this.convertTableDescriptionToCreateTableInput( table ) );
+        const response = await this.client.send( command );
+
+        debug( `Table ${ table.TableName } created successfully.`, response.TableDescription );
+    }
+
+    async getSchema( tableName: string ) {
         const command = new DescribeTableCommand( { TableName: tableName } );
 
         debug( `Getting schema for table: ${ tableName }` );
@@ -173,7 +228,7 @@ export class DynamoDBUtil {
         return partitionKey;
     }
 
-    async fetchTableData( tableName: string ) {
+    async fetch( tableName: string ) {
         const command = new ScanCommand( { TableName: tableName } );
 
         debug( `Fetching data for table: ${ tableName }` );
@@ -185,7 +240,7 @@ export class DynamoDBUtil {
         return response.Items ?? [];
     }
 
-    async dropTable( tableName: string ) {
+    async drop( tableName: string ) {
         const command = new DeleteTableCommand( { TableName: tableName } );
 
         debug( `Dropping table: ${ tableName }...` );
@@ -197,22 +252,29 @@ export class DynamoDBUtil {
         return response;
     }
 
-    async dropAllTables() {
-        try {
-            const tableNames = await this.listTables();
-            if ( ! tableNames || tableNames.length === 0 ) {
-                debug( "No tables found to drop." );
-                return;
-            }
+    async dropAll( maxChunkSize = 10 ) {
+        const results: DeleteTableCommandOutput[] = [];
 
-            const results = await Promise.all( tableNames.map( name => this.dropTable( name ) ) );
-
-            debug( "All ta¬bles dropped successfully." );
-
-            return results;
-        } catch ( error ) {
-            console.error( "Failed to drop all tables:", error );
+        const tableNames = await this.list();
+        if ( ! tableNames || tableNames.length === 0 ) {
+            debug( "No tables found to drop." );
+            return;
         }
+
+        for ( let i = 0 ; i < tableNames.length ; i += maxChunkSize ) {
+            const chunk = tableNames.slice( i, i + maxChunkSize );
+            console.log( `Deleting tables: ${ chunk.join( ", " ) }` );
+
+            const promises = chunk.map( async ( tableName ) => {
+                results.push( await this.drop( tableName ) );
+            } );
+
+            await Promise.all( promises );
+        }
+
+        console.log( "All tables dropped successfully." );
+
+        return results;
     }
 }
 

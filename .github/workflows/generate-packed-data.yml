@@ -1,4 +1,4 @@
-name: Simple run
+name: Generate packed data
 
 on:
   workflow_call:
@@ -30,8 +30,11 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Build
-        run: bun run bun:start
+      - name: Create tables
+        run: bun run bun:db-seed
+
+      - name: Generate packed data
+        run: bun run bun:db-export-packed-data
 
       - name: Upload assets
         uses: actions/upload-artifact@v3

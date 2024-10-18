@@ -9,7 +9,7 @@ import net from "node:net";
 
 import fetch from "node-fetch";
 
-const NODE_MODULES_DIR_PATH = path.dirname( process.env[ "npm_package_json" ]! ) + "/node_modules";
+const NODE_MODULES_DIR_PATH = path.dirname( process.env[ "npm_package_json" ] ?? process.cwd() ) + "/node_modules";
 
 const debug = util.debug( 'dynamodb-local:server' );
 

@@ -3,8 +3,8 @@ name: Main workflow
 on: [ push, pull_request ]
 
 jobs:
-  start-simple-run:
-    uses: ./.github/workflows/simple-run.yml
+  generate-packed-data:
+    uses: ./.github/workflows/generate-packed-data.yml
     with:
       runs-on: ubuntu-latest
     secrets:
