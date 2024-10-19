@@ -9,10 +9,11 @@ import {
     type LocalSecondaryIndex,
     type ProvisionedThroughput,
     PutItemCommand,
-    ScanCommand
+    ScanCommand,
 } from "@aws-sdk/client-dynamodb";
 
 import type { TableDescription } from "@aws-sdk/client-dynamodb/dist-types";
+import type { ClientInputEndpointParameters } from "@aws-sdk/client-dynamodb/dist-types/endpoint/EndpointParameters";
 import type { ListTablesInput } from "@aws-sdk/client-dynamodb/dist-types/models/models_0";
 
 import * as fs from 'fs/promises';
@@ -33,6 +34,21 @@ export class DynamoDBUtil {
             },
             region: "fakeRegion",
             endpoint: "http://localhost:8000",
+        } );
+
+        return new DynamoDBUtil( client );
+    }
+
+    public static awsWithCredentials(
+        region: ClientInputEndpointParameters["region"],
+        credentials: {
+            accessKeyId: string,
+            secretAccessKey: string,
+        }
+    ) {
+        const client = new DynamoDBClient( {
+            credentials,
+            region: "us-east-1",
         } );
 
         return new DynamoDBUtil( client );
