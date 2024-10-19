@@ -55,3 +55,10 @@ jobs:
       runs-on: ubuntu-latest
     secrets:
       token: ${{ secrets.GITHUB_TOKEN }}
+
+  test:
+    uses: ./.github/workflows/test.yml
+    with:
+      runs-on: ubuntu-latest
+    secrets:
+      token: ${{ secrets.GITHUB_TOKEN }}
