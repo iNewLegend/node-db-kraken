@@ -51,6 +51,18 @@ async function handleArgvAfterStart() {
     }
 }
 
+async function importData( path: string ) {
+    // Validate path exists.
+    if ( ! fs.existsSync( path ) ) {
+        console.error( `File not found: ${ path }` );
+        process.exit( 1 );
+    }
+
+    const result = await dbUtil.import( path );
+
+    console.log( `Imported table(s): count: ${ result.length }, names: ${ result.join( ", " ) }` );
+}
+
 async function exportRaw() {
     const tableNames = await dbUtil.list();
 
@@ -111,6 +123,11 @@ async function exportTransform( unpackedMode = false ) {
     }
 
     const transformMethod = unpackedMode ? transformToUnpackedMode : transformToPackedMode;
+
+    if ( ! tableNames?.length ) {
+        console.log( "No tables found." );
+        return;
+    }
 
     for ( const tableName of tableNames ?? [] ) {
         console.log( `Processing table: ${ tableName }` );
@@ -221,6 +238,17 @@ async function main() {
             await exportRaw();
             break;
 
+        case "@import":
+            const path = process.argv[ commandIndex + 1 ];
+
+            if ( ! path ) {
+                console.error( "Missing path to import data from." );
+                console.log( "Usage: @import <path-to-data-file>" );
+                process.exit( 1 );
+            }
+
+            await importData( path );
+            break;
 
         case "@list-tables":
             const tableNames = await dbUtil.list();

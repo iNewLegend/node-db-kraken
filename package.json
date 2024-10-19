@@ -13,6 +13,7 @@
         "bun:db-export-raw": "bun --bun run src/index.ts @export-raw",
         "bun:db-export-packed-data": "bun --bun run src/index.ts @export-packed-data",
         "bun:db-export-unpacked-data": "bun --bun run src/index.ts @export-unpacked-data",
+        "bun:db-import-raw-data-json": "bun --bun run src/index.ts  @import ./assets/raw-data.json --db-fresh-start",
         "node:test": "node --import tsx/esm --test tests/*.spec.ts"
     },
     "dependencies": {
