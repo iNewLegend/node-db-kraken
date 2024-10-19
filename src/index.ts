@@ -51,6 +51,28 @@ async function handleArgvAfterStart() {
     }
 }
 
+async function exportRaw() {
+    const tableNames = await dbUtil.list();
+
+    if ( ! tableNames?.length ) {
+        console.log( "No tables found." );
+        return;
+    }
+
+    // Ensure `assets` directory exists.
+    if ( ! fs.existsSync( process.cwd() + "/assets" ) ) {
+        fs.mkdirSync( process.cwd() + "/assets" );
+    }
+
+    const path = `/assets/${ new Date().toISOString().split( "T" )[ 0 ] }-raw-data.json`;
+
+    console.log( `Table names: ${ tableNames.join( ", " ) }` );
+    console.log( `Exporting raw data to ${ process.cwd() + path }` );
+
+    // Export to assets with date format eg: 2024-05-05
+    await dbUtil.export( process.cwd() + path );
+}
+
 async function exportTransform( unpackedMode = false ) {
     function transformToPackedMode( data: any[], partitionKey: string ) {
         return data.map( ( item: any ) => {
@@ -194,6 +216,10 @@ async function main() {
         case "@export-unpacked-data":
             await exportTransform( true );
             break
+
+        case "@export-raw":
+            await exportRaw();
+            break;
 
         case "@no-action":
             break;
