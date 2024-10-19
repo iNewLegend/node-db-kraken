@@ -48,7 +48,7 @@ export class DynamoDBUtil {
     ) {
         const client = new DynamoDBClient( {
             credentials,
-            region: "us-east-1",
+            region
         } );
 
         return new DynamoDBUtil( client );
