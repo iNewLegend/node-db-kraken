@@ -181,11 +181,14 @@ export class DynamoDBUtil {
         const tables = await this.loadTables( filePath );
 
         for ( const table of tables ) {
-            await this.create( table );
+            debug( `Importing schema for table: ${ table.TableName }` );
+            await this.create( table, true );
         }
     }
 
     async import( filePath: string ) {
+        const importedTables: string[] = [];
+
         await this.importSchema( filePath );
 
         const tables = await this.loadTables( filePath );
@@ -196,9 +199,13 @@ export class DynamoDBUtil {
 
                 await this.insert( table.TableName, table.data );
 
+                importedTables.push( table.TableName );
+
                 debug( `Data inserted into ${ table.TableName }` );
             }
         }
+
+        return importedTables;
     }
 
     public async create( table: TableDescription, ensureTableActive = false, ensureTimeout = 3000 ) {
