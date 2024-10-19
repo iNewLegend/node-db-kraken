@@ -128,6 +128,35 @@ export class DynamoDBUtil {
         return new Uint8Array( Object.values( data ) );
     }
 
+    // Deep clone function with binary attribute conversion
+    private deepCloneWithBinaryConversion( obj: any ): any {
+        if ( typeof obj !== 'object' || obj === null ) {
+            return obj; // Return the value if obj is not an object
+        }
+
+        if ( Array.isArray( obj ) ) {
+            return obj.map( item => this.deepCloneWithBinaryConversion( item ) );
+        }
+
+        const clone: any = {};
+
+        for ( const key in obj ) {
+            if ( obj.hasOwnProperty( key ) ) {
+                if ( key === 'B' ) {
+                    clone[ key ] = this.convertToUint8Array( obj[ key ] );
+                } else if ( key === 'BS' ) {
+                    clone[ key ] = obj[ key ].map( ( b: any ) => this.convertToUint8Array( b ) );
+                } else if ( typeof obj[ key ] === 'object' ) {
+                    clone[ key ] = this.deepCloneWithBinaryConversion( obj[ key ] );
+                } else {
+                    clone[ key ] = obj[ key ];
+                }
+            }
+        }
+
+        return clone;
+    }
+
     async list( input: ListTablesInput = {} ) {
         const command = new ListTablesCommand( input );
 
@@ -154,13 +183,15 @@ export class DynamoDBUtil {
 
     async insert( tableName: string, items: any[] ) {
         for ( const item of items ) {
-            debug( `Inserting item into ${ tableName }:`, item );
+            const convertedItem = this.deepCloneWithBinaryConversion( item );
 
-            const command = new PutItemCommand( { TableName: tableName, Item: item } );
+            debug( `Inserting item into ${ tableName }:`, convertedItem );
+
+            const command = new PutItemCommand( { TableName: tableName, Item: convertedItem } );
 
             await this.client.send( command );
 
-            debug( `Inserted item into ${ tableName }:`, item );
+            debug( `Inserted item into ${ tableName }:`, convertedItem );
         }
     }
 
