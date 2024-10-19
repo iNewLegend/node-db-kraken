@@ -8,7 +8,7 @@
         "clean:internals": "rm -rf node_modules/.bin/dynamodb-local",
         "tsx:debug": "NODE_DEBUG=\"dynamodb-local:*\"  tsx --trace-uncaught src/index.ts",
         "bun:debug": "bun --bun --inspect-brk run src/index.ts",
-        "bun:db-fresh-start": "bun --bun run src/index.ts --db-fresh-start",
+        "bun:db-fresh-start": "bun --bun run src/index.ts @no-action --db-fresh-start",
         "bun:db-seed": "bun --bun run src/index.ts --db-fresh-start @seed 15 15",
         "bun:db-export-raw": "bun --bun run src/index.ts @export-raw",
         "bun:db-export-packed-data": "bun --bun run src/index.ts @export-packed-data",
