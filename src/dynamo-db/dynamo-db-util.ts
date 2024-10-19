@@ -138,14 +138,6 @@ export class DynamoDBUtil {
 
     async insert( tableName: string, items: any[] ) {
         for ( const item of items ) {
-            // for ( const key in item ) {
-            //     if ( item[ key ].B ) {
-            //         item[ key ].B = this.convertToUint8Array( item[ key ].B );
-            //     }
-            //     if ( item[ key ].BS ) {
-            //         item[ key ].BS = item[ key ].BS.map( this.convertToUint8Array );
-            //     }
-            // }
             debug( `Inserting item into ${ tableName }:`, item );
 
             const command = new PutItemCommand( { TableName: tableName, Item: item } );
@@ -209,13 +201,45 @@ export class DynamoDBUtil {
         }
     }
 
-    public async create( table: TableDescription ) {
+    public async create( table: TableDescription, ensureTableActive = false, ensureTimeout = 3000 ) {
         debug( "Creating table:", table.TableName );
 
         const command = new CreateTableCommand( this.convertTableDescriptionToCreateTableInput( table ) );
         const response = await this.client.send( command );
 
         debug( `Table ${ table.TableName } created successfully.`, response.TableDescription );
+
+        if ( ensureTableActive ) {
+            let triedOnce = false;
+
+            async function isTableActive( this: DynamoDBUtil, table: TableDescription ) {
+                return new Promise( async ( resolve, reject ) => {
+                    debug( `Ensuring table ${ table.TableName } is active with timeout ${ ensureTimeout }ms...` );
+
+                    const tableDescription = await this.describe( table.TableName! );
+                    const tableStatus = tableDescription?.TableStatus;
+
+                    if ( tableStatus === "ACTIVE" ) {
+                        debug( `Table ${ table.TableName } is active.` );
+                        resolve( tableDescription );
+                    }
+
+                    if ( triedOnce ) {
+                        debug( `Table ${ table.TableName } is not active. Giving up.` );
+                        reject( `Table ${ table.TableName } is not active. Giving up.` );
+                        return;
+                    }
+
+                    if ( tableStatus === "CREATING" ) {
+                        debug( `Table ${ table.TableName } is still creating...` );
+                        setTimeout( () => resolve( isTableActive.call( this, table ) ), ensureTimeout );
+                        return;
+                    }
+                } )
+            }
+
+            await isTableActive.call( this, table );
+        }
     }
 
     async getSchema( tableName: string ) {

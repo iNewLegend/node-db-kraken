@@ -312,11 +312,11 @@ const generateStringSet = () => {
  * Generates a set type value of number set for DynamoDB.
  */
 const generateNumberSet = () => {
-    const set = new Set<number>();
+    const set = new Set<string>();
     const setSize = faker.number.int( { min: 1, max: 10 } );
 
     while ( set.size < setSize ) {
-        set.add( faker.number.float( { min: -1e37, max: 1e37, fractionDigits: 10 } ) );
+        set.add( `${ faker.number.float( { min: -1e37, max: 1e37, fractionDigits: 10 } ) }` );
     }
 
     return Array.from( set );
@@ -459,7 +459,7 @@ class DynamoDBSeedGeneratedValue {
         this.value = valueGenerators[ this.generator ]();
 
         if ( withMark ) {
-            return { [ this.mark ]: this.value };
+            return { [ this.mark ]: Number.isInteger( this.value ) ? `${ this.value }` : this.value };
         }
         return this.value;
     }

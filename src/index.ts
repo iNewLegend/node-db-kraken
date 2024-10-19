@@ -1,4 +1,4 @@
-import { de, faker } from "@faker-js/faker";
+import { faker } from "@faker-js/faker";
 import * as fs from "node:fs";
 import { DynamoDBObject } from "./dynamo-db/dynamo-db-object";
 
@@ -125,10 +125,10 @@ async function seed( tablesCount: number, itemsCount: number ) {
                     { AttributeName: "id", KeyType: "HASH" }
                 ],
                 ProvisionedThroughput: {
-                    ReadCapacityUnits: 1,
-                    WriteCapacityUnits: 1
+                    ReadCapacityUnits: 10,
+                    WriteCapacityUnits: 10
                 }
-            } );
+            }, true );
             console.log( `Created table ${ tableName }` );
         } catch ( e ) {
             console.error( `Failed to create table ${ tableName }:`, e );
