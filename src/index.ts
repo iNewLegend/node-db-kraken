@@ -221,6 +221,18 @@ async function main() {
             await exportRaw();
             break;
 
+
+        case "@list-tables":
+            const tableNames = await dbUtil.list();
+
+            if ( ! tableNames?.length ) {
+                console.log( "No tables found." );
+                return;
+            }
+
+            console.log( tableNames.join( ", " ) );
+            break;
+
         case "@no-action":
             break;
 
