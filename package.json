@@ -6,11 +6,13 @@
         "preinstall": "./scripts/install-java-runner.sh",
         "clean": "rm -rf node_modules bun.lockb package-lock.json",
         "clean:internals": "rm -rf node_modules/.bin/dynamodb-local",
-        "tsx:debug": "NODE_DEBUG=\"dynamodb-local:*\"  tsx --trace-uncaught src/index.ts --db-internals-path /tmp/dynamodb-local/",
+        "tsx:debug": "NODE_DEBUG=\"dynamodb-local:*\"  tsx --trace-uncaught src/index.ts",
         "bun:debug": "bun --bun --inspect-brk run src/index.ts",
         "bun:db-fresh-start": "bun --bun run src/index.ts --db-fresh-start",
         "bun:db-seed": "bun --bun run src/index.ts --db-fresh-start @seed 15 15",
-        "bun:db-export-packed-data": "bun --bun run src/index.ts @export-packed-data"
+        "bun:db-export-packed-data": "bun --bun run src/index.ts @export-packed-data",
+        "bun:db-export-unpacked-data": "bun --bun run src/index.ts @export-unpacked-data",
+        "node:test": "node --import tsx/esm --test tests/*.spec.ts"
     },
     "dependencies": {
         "@aws-sdk/client-dynamodb": "3.670.0",
@@ -19,9 +21,9 @@
     },
     "devDependencies": {
         "@faker-js/faker": "^9.0.3",
-        "@types/bun": "latest",
         "@types/node": "^22.7.5",
         "@types/tar": "^6.1.13",
+        "bun-types": "^1.1.31",
         "tsx": "latest"
     },
     "peerDependencies": {

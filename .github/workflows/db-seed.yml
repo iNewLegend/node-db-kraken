@@ -1,4 +1,4 @@
-name: Generate packed data
+name: Database Seed
 
 on:
   workflow_call:
@@ -17,27 +17,28 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v1
 
-      - name: Cache dependencies
+      - name: Set up Java
+        id: set-java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'  # Distribution of Java (e.g., temurin, zulu, adopt, etc.)
+          java-version: '17'        # Specify the Java version you need
+
+      - name: Set up cache for Bun and Node.js dependencies
         uses: actions/cache@v3
         with:
-          path: ~/.bun/install/cache
+          path: |
+            ~/.bun
+            ./node_modules
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
           restore-keys: |
             ${{ runner.os }}-bun-
+
+      - uses: oven-sh/setup-bun@v1
 
       - name: Install dependencies
         run: bun install
 
       - name: Create tables
         run: bun run bun:db-seed
-
-      - name: Generate packed data
-        run: bun run bun:db-export-packed-data
-
-      - name: Upload assets
-        uses: actions/upload-artifact@v3
-        with:
-          name: assets
-          path: ./assets

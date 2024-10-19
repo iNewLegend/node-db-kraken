@@ -3,8 +3,54 @@ name: Main workflow
 on: [ push, pull_request ]
 
 jobs:
-  generate-packed-data:
-    uses: ./.github/workflows/generate-packed-data.yml
+  setup-cache:
+    runs-on: ubuntu-latest
+    outputs:
+      java-home-path: ${{ steps.determine-java-home.outputs.java-home-path }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java
+        id: set-java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'  # Distribution of Java (e.g., temurin, zulu, adopt, etc.)
+          java-version: '17'        # Specify the Java version you need
+
+      - name: Run Java installation script
+        run: |
+          chmod +x ./scripts/install-java.sh
+          ./scripts/install-java.sh
+
+      - name: Set up cache for Bun and Node.js dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.bun
+            ./node_modules
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+  db-seed:
+    uses: ./.github/workflows/db-seed.yml
+    needs: setup-cache
+    with:
+      runs-on: ubuntu-latest
+    secrets:
+      token: ${{ secrets.GITHUB_TOKEN }}
+
+  export-packed-data:
+    uses: ./.github/workflows/export-packed-data.yml
+    needs: [ setup-cache, db-seed ]
+    with:
+      runs-on: ubuntu-latest
+    secrets:
+      token: ${{ secrets.GITHUB_TOKEN }}
+
+  export-unpacked-data:
+    uses: ./.github/workflows/export-unpacked-data.yml
+    needs: [ setup-cache, db-seed ]
     with:
       runs-on: ubuntu-latest
     secrets:

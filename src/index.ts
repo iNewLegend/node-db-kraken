@@ -1,5 +1,6 @@
-import { faker } from "@faker-js/faker";
+import { de, faker } from "@faker-js/faker";
 import * as fs from "node:fs";
+import { DynamoDBObject } from "./dynamo-db/dynamo-db-object";
 
 import { DynamoDBLocalServer } from "./dynamo-db/dynamo-db-server";
 import { DynamoDBUtil } from "./dynamo-db/dynamo-db-util";
@@ -50,28 +51,32 @@ async function handleArgvAfterStart() {
     }
 }
 
-async function exportPackedData() {
+async function exportTransform( unpackedMode = false ) {
     function transformToPackedMode( data: any[], partitionKey: string ) {
         return data.map( ( item: any ) => {
-            const partitionValue = item[ partitionKey ];
+            const partitionValue = DynamoDBObject.from( item[ partitionKey ], 0 );
 
-            const normalizedObject: Record<string, any> = {};
+            delete item[ partitionKey ];
 
-            Object.entries( item ).forEach( ( [ key, value ] ) => {
-                if ( key === partitionKey ) {
-                    return;
-                }
-
-                if ( typeof value === "object" ) {
-                    value = JSON.stringify( value );
-                }
-
-                normalizedObject[ key ] = value;
-            } );
+            const parsedObject = DynamoDBObject.from( { M: { ... item } }, 0 );
 
             return {
                 [ partitionKey ]: partitionValue,
-                ... normalizedObject,
+                data: parsedObject,
+            };
+        } );
+    }
+
+    function transformToUnpackedMode( table: any[], partitionKey: string ) {
+        return table.map( ( row: any ) => {
+            const parsedObject = DynamoDBObject.from( { M: row }, 1 );
+            const partitionValue = parsedObject[ partitionKey ];
+
+            delete parsedObject[ partitionKey ];
+
+            return {
+                [ partitionKey ]: partitionValue,
+                ... parsedObject,
             };
         } );
     }
@@ -83,19 +88,22 @@ async function exportPackedData() {
         fs.mkdirSync( process.cwd() + "/assets" );
     }
 
+    const transformMethod = unpackedMode ? transformToUnpackedMode : transformToPackedMode;
+
     for ( const tableName of tableNames ?? [] ) {
         console.log( `Processing table: ${ tableName }` );
 
         const partitionKey = await dbUtil.getSchema( tableName );
         const tableData = await dbUtil.fetch( tableName );
+        const packedData = transformMethod( tableData, partitionKey );
 
-        const packedData = transformToPackedMode( tableData, partitionKey );
+        const format = `/assets/${ tableName }-${ unpackedMode ? "unpacked" : "packed" }-data.json`;
 
-        const packedDataFilePath = process.cwd() + `/assets/${ tableName }-packed-data.json`;
+        const targetPath = process.cwd() + format;
 
-        fs.writeFileSync( packedDataFilePath, JSON.stringify( packedData, null, 4 ) );
+        fs.writeFileSync( targetPath, JSON.stringify( packedData, null, 4 ) );
 
-        console.log( `Packed data saved to file: ${ packedDataFilePath }` );
+        console.log( `data saved to file: ${ targetPath }` );
     }
 }
 
@@ -181,7 +189,10 @@ async function main() {
             break;
 
         case "@export-packed-data":
-            await exportPackedData();
+            await exportTransform();
+            break;
+        case "@export-unpacked-data":
+            await exportTransform( true );
             break
 
         case "@no-action":

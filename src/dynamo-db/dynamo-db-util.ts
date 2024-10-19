@@ -1,15 +1,18 @@
 import {
     CreateTableCommand,
-    DeleteTableCommand, type DeleteTableCommandOutput,
+    DeleteTableCommand,
+    type DeleteTableCommandOutput,
     DescribeTableCommand,
-    DynamoDBClient, type GlobalSecondaryIndex,
-    ListTablesCommand, type LocalSecondaryIndex, type ProvisionedThroughput,
+    DynamoDBClient,
+    type GlobalSecondaryIndex,
+    ListTablesCommand,
+    type LocalSecondaryIndex,
+    type ProvisionedThroughput,
     PutItemCommand,
     ScanCommand
 } from "@aws-sdk/client-dynamodb";
 
 import type { TableDescription } from "@aws-sdk/client-dynamodb/dist-types";
-import type { CreateTableCommandInput } from "@aws-sdk/client-dynamodb/dist-types/commands/CreateTableCommand";
 import type { ListTablesInput } from "@aws-sdk/client-dynamodb/dist-types/models/models_0";
 
 import * as fs from 'fs/promises';
