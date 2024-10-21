@@ -4,6 +4,7 @@ import {
     type DeleteTableCommandOutput,
     DescribeTableCommand,
     DynamoDBClient,
+    GetItemCommand,
     type GlobalSecondaryIndex,
     ListTablesCommand,
     type LocalSecondaryIndex,
@@ -294,6 +295,18 @@ export class DynamoDBUtil {
 
             await isTableActive.call( this, table );
         }
+    }
+
+    async getItemById( tableName: string, id: string ) {
+        const command = new GetItemCommand( { TableName: tableName, Key: { id: { S: id } } } );
+
+        debug( `Getting item by id: ${ id } from table: ${ tableName }` );
+
+        const { Item } = await this.client.send( command );
+
+        debug( `Item by id ${ id } fetched from table ${ tableName }:`, Item );
+
+        return Item;
     }
 
     async getSchema( tableName: string ) {
