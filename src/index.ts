@@ -1,4 +1,5 @@
 import { faker } from "@faker-js/faker";
+import type { ChildProcessWithoutNullStreams } from "node:child_process";
 import * as fs from "node:fs";
 import { DynamoDBObject } from "./dynamo-db/dynamo-db-object";
 
@@ -206,7 +207,7 @@ async function seed( tablesCount: number, itemsCount: number ) {
 
 }
 
-async function main() {
+async function main( localServerProcess: ChildProcessWithoutNullStreams ) {
     // Find an argument that starts with '@'.
     const commandIndex = process.argv.findIndex( ( arg ) => arg.startsWith( "@" ) );
 
@@ -290,9 +291,22 @@ async function main() {
         case "@no-action":
             break;
 
+        case "@server-run":
+            // Await for server shutdown before continuing
+            await new Promise<void>( ( resolve ) => {
+                localServerProcess.once( "exit", () => {
+                    console.log( "Server exited." );
+
+                    resolve();
+                } )
+            } )
+            return;
+
         default:
             console.error( "Unknown command: " + commandAction );
     }
+
+    serverProcess.kill( "SIGTERM" );
 }
 
 handleArgvBeforeStart()
@@ -301,7 +315,6 @@ const serverProcess = await lunchDynamoDBLocal();
 
 await handleArgvAfterStart();
 
-await main().catch( console.error )
+await main( serverProcess ).catch( console.error )
 
-serverProcess.kill( "SIGTERM" );
 

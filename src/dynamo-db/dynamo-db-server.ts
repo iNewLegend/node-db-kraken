@@ -215,6 +215,7 @@ export class DynamoDBLocalServer {
             dynamoInternalsJAR,
             '-port',
             this.args.port.toString(),
+            "-sharedDb",
             ... this.args.executeArgs,
         ];
 

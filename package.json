@@ -14,12 +14,16 @@
         "bun:db-export-packed-data": "bun --bun run src/index.ts @export-packed-data",
         "bun:db-export-unpacked-data": "bun --bun run src/index.ts @export-unpacked-data",
         "bun:db-import-raw-data-json": "bun --bun run src/index.ts  @import ./assets/raw-data.json --db-fresh-start",
+        "tsx:debug:streams": "NODE_DEBUG=\"dynamodb-local:*\"  tsx --trace-uncaught src/streams-poling.ts",
         "node:test": "node --import tsx/esm --test tests/*.spec.ts"
     },
     "dependencies": {
         "@aws-sdk/client-dynamodb": "3.670.0",
-        "tar": "7.4.3",
-        "node-fetch": "^3.3.2"
+        "@aws-sdk/client-dynamodb-streams": "^3.675.0",
+        "@smithy/util-base64": "^3.0.0",
+        "jest-diff": "^29.7.0",
+        "node-fetch": "^3.3.2",
+        "tar": "7.4.3"
     },
     "devDependencies": {
         "@faker-js/faker": "^9.0.3",
