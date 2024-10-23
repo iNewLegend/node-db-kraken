@@ -1,12 +1,15 @@
-import { faker } from "@faker-js/faker";
+import { symbols, type TDynamoDBPossibleSymbols } from "./dynamo-db/dynamo-db-object";
 import type { ChildProcessWithoutNullStreams } from "node:child_process";
 import * as fs from "node:fs";
+
+import { el, faker } from "@faker-js/faker";
+
 import { DynamoDBObject } from "./dynamo-db/dynamo-db-object";
 
 import { DynamoDBLocalServer } from "./dynamo-db/dynamo-db-server";
-import { DynamoDBUtil } from "./dynamo-db/dynamo-db-util";
+import { DynamoDBClient } from "./dynamo-db/dynamo-db-client";
 
-const dbUtil = DynamoDBUtil.local();
+const dbClient = DynamoDBClient.local();
 
 let dbInternalsExtractPath: string | undefined;
 
@@ -48,7 +51,7 @@ function handleArgvBeforeStart() {
 
 async function handleArgvAfterStart() {
     if ( process.argv.includes( "--db-fresh-start" ) ) {
-        await dbUtil.dropAll()
+        await dbClient.dropAll()
     }
 }
 
@@ -59,13 +62,13 @@ async function importData( path: string ) {
         process.exit( 1 );
     }
 
-    const result = await dbUtil.import( path );
+    const result = await dbClient.import( path );
 
     console.log( `Imported table(s): count: ${ result.length }, names: ${ result.join( ", " ) }` );
 }
 
 async function exportRaw() {
-    const tableNames = await dbUtil.list();
+    const tableNames = await dbClient.list();
 
     if ( ! tableNames?.length ) {
         console.log( "No tables found." );
@@ -83,7 +86,7 @@ async function exportRaw() {
     console.log( `Exporting raw data to ${ process.cwd() + path }` );
 
     // Export to assets with date format eg: 2024-05-05
-    await dbUtil.export( process.cwd() + path );
+    await dbClient.export( process.cwd() + path );
 }
 
 async function exportTransform( unpackedMode = false ) {
@@ -116,7 +119,7 @@ async function exportTransform( unpackedMode = false ) {
         } );
     }
 
-    const tableNames = await dbUtil.list();
+    const tableNames = await dbClient.list();
 
     // Ensure `assets` directory exists.
     if ( ! fs.existsSync( process.cwd() + "/assets" ) ) {
@@ -133,8 +136,8 @@ async function exportTransform( unpackedMode = false ) {
     for ( const tableName of tableNames ?? [] ) {
         console.log( `Processing table: ${ tableName }` );
 
-        const partitionKey = await dbUtil.getSchema( tableName );
-        const tableData = await dbUtil.fetch( tableName );
+        const partitionKey = await dbClient.getSchema( tableName );
+        const tableData = await dbClient.scan( tableName );
         const packedData = transformMethod( tableData, partitionKey );
 
         const format = `/assets/${ tableName }-${ unpackedMode ? "unpacked" : "packed" }-data.json`;
@@ -156,7 +159,7 @@ async function seed( tablesCount: number, itemsCount: number ) {
     const createTable = async ( tableName: string ) => {
         try {
             console.log( `Creating table ${ tableName }` );
-            await dbUtil.create( {
+            await dbClient.create( {
                 TableName: tableName,
                 AttributeDefinitions: [
                     { AttributeName: "id", AttributeType: "S" }
@@ -165,8 +168,8 @@ async function seed( tablesCount: number, itemsCount: number ) {
                     { AttributeName: "id", KeyType: "HASH" }
                 ],
                 ProvisionedThroughput: {
-                    ReadCapacityUnits: 10,
-                    WriteCapacityUnits: 10
+                    ReadCapacityUnits: 1000,
+                    WriteCapacityUnits: 1000
                 }
             }, true );
             console.log( `Created table ${ tableName }` );
@@ -192,7 +195,7 @@ async function seed( tablesCount: number, itemsCount: number ) {
             items.push( item );
         }
 
-        await dbUtil.insert( tableName, items );
+        await dbClient.insert( tableName, items );
     }
 
     console.log( `Seeding ${ itemsCount } random items into each of ${ tablesCount } tables completed.` );
@@ -205,6 +208,75 @@ async function seed( tablesCount: number, itemsCount: number ) {
         await seedTable( tableName, itemsCount );
     }
 
+}
+
+async function analyzeAttributes( commandIndex: number ) {
+    const tableNameArg = process.argv[ commandIndex + 1 ];
+
+    if ( ! tableNameArg ) {
+        console.error( "Missing table name." );
+        console.log( "Usage: @analyze-attributes <table-name>" );
+        process.exit( 1 );
+    }
+
+    const tableNames = [];
+
+    if ( "@list" === tableNameArg ) {
+        tableNames.push( ... ( await dbClient.list() ?? [] ) );
+    } else {
+        tableNames.push( tableNameArg );
+    }
+
+    for ( const tableName of tableNames ) {
+        let scannedItemsCount = 0;
+
+        console.log(
+            `Analyzing attributes for table ${ tableName }...`
+        )
+
+        const metrics = await dbClient.getTableMetrics( tableName );
+
+        const { tableSizeBytes, itemCount } = metrics,
+            averageItemSize = tableSizeBytes / itemCount,
+            limit = Math.floor( 1 * 1024 * 1024 / averageItemSize );
+
+        const attributes = new Map<string, Set<TDynamoDBPossibleSymbols>>;
+
+        for await ( const batch of dbClient.scanGenerator( tableName, limit ) ) {
+            scannedItemsCount += batch.length;
+            console.log( `Scanning ${ batch.length } items ${ scannedItemsCount }/${ itemCount }...` );
+            for ( const row of batch ) {
+                for ( const [ key, value ] of Object.entries( row ) ) {
+                    if ( ! attributes.has( key ) ) {
+                        attributes.set( key, new Set() );
+                    }
+
+                    for ( const symbol in value ) {
+                        attributes.get( key )?.add( symbol as any );
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Save as JSON file.
+        const targetPath = process.cwd() + `/assets/${ tableName }-attributes.json`;
+
+        fs.writeFileSync( targetPath, JSON.stringify( {
+            attributes: Array.from( attributes.entries() ).map( ( [ key, value ] ) => {
+                return {
+                    name: key,
+                    symbols: Array.from( value ),
+                };
+            } ),
+            averageItemSize,
+            limit,
+            itemCount,
+            tableSizeBytes,
+        }, null, 4 ) );
+
+        console.log( `\Attributes for table ${ tableName } saved to file: ${ targetPath }` );
+    }
 }
 
 async function main( localServerProcess: ChildProcessWithoutNullStreams ) {
@@ -249,7 +321,7 @@ async function main( localServerProcess: ChildProcessWithoutNullStreams ) {
                 process.exit( 1 );
             }
 
-            const item = await dbUtil.getItemById( tableName, id );
+            const item = await dbClient.getItemById( tableName, id );
 
             if ( ! item ) {
                 console.error( `Item not found: ${ tableName }#${ id }` );
@@ -278,7 +350,7 @@ async function main( localServerProcess: ChildProcessWithoutNullStreams ) {
             break;
 
         case "@list-tables":
-            const tableNames = await dbUtil.list();
+            const tableNames = await dbClient.list();
 
             if ( ! tableNames?.length ) {
                 console.log( "No tables found." );
@@ -301,6 +373,11 @@ async function main( localServerProcess: ChildProcessWithoutNullStreams ) {
                 } )
             } )
             return;
+
+        case "@analyze-attributes":
+            await analyzeAttributes( commandIndex );
+            break;
+
 
         default:
             console.error( "Unknown command: " + commandAction );
