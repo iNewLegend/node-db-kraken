@@ -9,9 +9,9 @@ import net from "node:net";
 
 import fetch from "node-fetch";
 
-const NODE_MODULES_DIR_PATH = path.dirname( process.env[ "npm_package_json" ] ?? process.cwd() ) + "/node_modules";
+const NODE_MODULES_DIR_PATH = process.cwd() + "/node_modules";
 
-const debug = util.debug( 'dynamodb-local:server' );
+const debug = util.debug( 'dynamodb:server' );
 
 interface IDynamoDBLocalServerArgs {
     packageURL?: string,
@@ -45,6 +45,7 @@ export class DynamoDBLocalServer {
 
         const terminate = async () => {
             if ( this.isTerminateProcessing ) {
+                console.log( "Already terminating..." );
                 return;
             }
             this.isTerminateProcessing = true;
@@ -114,7 +115,13 @@ export class DynamoDBLocalServer {
     }
 
     private async downloadWithProgress( url: string = this.args.packageURL, targetPath: string = this.args.packageTmpPath ) {
-        const res = await fetch( url );
+        const res = await fetch( url, {
+            // Linux-optimized settings
+            headers: {
+                'Connection': 'keep-alive',
+                'Accept-Encoding': 'gzip, deflate'
+            }
+        } );
         if ( ! res.ok ) {
             throw new Error( `Failed to download DynamoDB Local: ${ res.statusText }` );
         }
@@ -131,26 +138,31 @@ export class DynamoDBLocalServer {
             if ( ! res.body ) {
                 throw new Error( 'Response body is missing.' );
             }
+
+            // Add timeout handling
+            const downloadTimeout = setTimeout( () => {
+                fileStream.destroy();
+                reject( new Error( 'Download timed out' ) );
+            }, 30000 ); // 30 second timeout
+
+            res.body.pipe( fileStream );
+
             res.body.on( 'data', chunk => {
-                fileStream.write( chunk );
                 downloadedBytes += chunk.length;
                 const progress = ( ( downloadedBytes / totalBytes ) * 100 ).toFixed( 2 );
                 process.stdout.write( `\rProgress: ${ progress }%` );
             } );
 
-            res.body.on( 'end', () => {
-                process.stdout.write( "\n" );
-
-                fileStream.end();
-            } );
-
             fileStream.on( 'finish', () => {
-                debug( '\nDownload completed.' );
+                clearTimeout( downloadTimeout );
+                process.stdout.write( '\nDownload completed.\n' );
                 resolve( targetPath );
             } );
 
-            res.body.on( 'error', reject );
-            fileStream.on( 'error', reject );
+            fileStream.on( 'error', err => {
+                clearTimeout( downloadTimeout );
+                reject( err );
+            } );
         } );
     }
 
@@ -215,6 +227,7 @@ export class DynamoDBLocalServer {
             dynamoInternalsJAR,
             '-port',
             this.args.port.toString(),
+            "-sharedDb",
             ... this.args.executeArgs,
         ];
 

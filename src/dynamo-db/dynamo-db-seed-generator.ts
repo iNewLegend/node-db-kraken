@@ -324,6 +324,7 @@ const generateNumberSet = () => {
 
 /**
  * Generates a set type value of a binary set for DynamoDB.
+ * TODO: Fix problem with duplication
  */
 const generateBinarySet = () => {
     const set = new Set<string>();

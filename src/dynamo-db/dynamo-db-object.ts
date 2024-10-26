@@ -13,10 +13,10 @@ export const symbols = {
     BS: Symbol.for( "BS" ),
 }
 
-type TPossibleSymbols = typeof symbols[keyof typeof symbols];
+export type TDynamoDBPossibleSymbols = typeof symbols[keyof typeof symbols];
 
 export class DynamoDBObject {
-    protected symbol: TPossibleSymbols | null = null;
+    protected symbol: TDynamoDBPossibleSymbols | null = null;
 
     // Raw value
     protected value: any = null;
@@ -77,7 +77,7 @@ export class DynamoDBObject {
         this.process( this.symbol, this.raw[ key as keyof typeof symbols ] );
     }
 
-    private process( symbol: TPossibleSymbols, rawValue: any ) {
+    private process( symbol: TDynamoDBPossibleSymbols, rawValue: any ) {
         switch ( symbol ) {
             case symbols.S:
             case symbols.N:
