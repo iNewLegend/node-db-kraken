@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert';
 
+import { TypeFallbackResolver as TypeFallbackResolverV3 } from "../src/dynamo-db/dynamo-db-type-fallback-resolver";
+
 class TypeFallbackResolverV1 {
     static getFallbackType( types: string[] ): string {
         switch ( types.sort().join( "," ) ) {
@@ -510,88 +512,6 @@ class TypeFallbackResolverV2 {
         }
 
         throw new Error( `Unexpected type combination: ${ normalizedTypes }` );
-    }
-}
-
-class TypeFallbackResolverV3 {
-    private static readonly TYPE_FLAGS = {
-        B: 1 << 0,      // 1
-        BOOL: 1 << 1,   // 2
-        N: 1 << 2,      // 4
-        S: 1 << 3,      // 8
-        M: 1 << 4,      // 16
-        BS: 1 << 5,     // 32
-        L: 1 << 6,      // 64
-        NS: 1 << 7,     // 128
-        SS: 1 << 8,     // 256
-        NULL: 1 << 9    // 512
-    } as const;
-
-    /**
-     * Binary mask representing all complex DynamoDB types.
-     *
-     * COMPLEX_MASK exists because third party software resolves any complex type (BS, L, M, NS, SS) to 'M'.
-     *
-     * It uses one fast bitwise operation instead of multiple individual checks, making type resolution lightning fast.
-     *
-     * Usage:
-     * @example
-     * ```typescript
-     * const typeMask = getTypeMask(inputTypes);
-     * if (typeMask & COMPLEX_MASK) {
-     *     return 'M'; // Complex type detected
-     * }
-     * ```
-     */
-    private static readonly COMPLEX_MASK =
-        TypeFallbackResolverV3.TYPE_FLAGS.BS |
-        TypeFallbackResolverV3.TYPE_FLAGS.L |
-        TypeFallbackResolverV3.TYPE_FLAGS.M |
-        TypeFallbackResolverV3.TYPE_FLAGS.NS |
-        TypeFallbackResolverV3.TYPE_FLAGS.SS;
-
-    // Precomputed type combinations using binary masks.
-    private static readonly TYPE_COMBINATIONS: Record<string, number[]> = {
-        'B': [
-            TypeFallbackResolverV3.TYPE_FLAGS.B,
-            TypeFallbackResolverV3.TYPE_FLAGS.B | TypeFallbackResolverV3.TYPE_FLAGS.NULL
-        ],
-        'BOOL': [
-            TypeFallbackResolverV3.TYPE_FLAGS.BOOL,
-            TypeFallbackResolverV3.TYPE_FLAGS.BOOL | TypeFallbackResolverV3.TYPE_FLAGS.NULL
-        ],
-        'N': [
-            TypeFallbackResolverV3.TYPE_FLAGS.N,
-            TypeFallbackResolverV3.TYPE_FLAGS.N | TypeFallbackResolverV3.TYPE_FLAGS.NULL,
-            TypeFallbackResolverV3.TYPE_FLAGS.BOOL | TypeFallbackResolverV3.TYPE_FLAGS.N,
-            TypeFallbackResolverV3.TYPE_FLAGS.BOOL | TypeFallbackResolverV3.TYPE_FLAGS.N | TypeFallbackResolverV3.TYPE_FLAGS.NULL
-        ]
-    };
-
-    private static getTypeFlag( type: string ): number {
-        return this.TYPE_FLAGS[ type as keyof typeof TypeFallbackResolverV3.TYPE_FLAGS ] || 0;
-    }
-
-    private static typesToBitMask( types: string[] ): number {
-        return types.reduce( ( mask, type ) => mask | this.getTypeFlag( type ), 0 );
-    }
-
-    static getFallbackType( types: string[] ): string {
-        const typeMask = this.typesToBitMask( types );
-
-        if ( typeMask & this.COMPLEX_MASK ) {
-            return 'M';
-        }
-
-        // Check simple type combinations.
-        for ( const [ fallbackType, masks ] of Object.entries( this.TYPE_COMBINATIONS ) ) {
-            if ( masks.includes( typeMask ) ) {
-                return fallbackType;
-            }
-        }
-
-        // Default to S for remaining valid combinations
-        return 'S';
     }
 }
 
