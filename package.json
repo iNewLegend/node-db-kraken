@@ -1,20 +1,15 @@
 {
-    "name": "node-dynamodb-connect",
+    "name": "node-db-kraken",
     "module": "index.ts",
     "type": "module",
     "scripts": {
         "preinstall": "./scripts/install-java-runner.sh",
         "clean": "rm -rf node_modules bun.lockb package-lock.json",
         "clean:internals": "rm -rf node_modules/.bin/dynamodb-local",
-        "tsx:debug": "NODE_DEBUG=\"dynamodb-local:*\"  tsx --trace-uncaught src/index.ts",
+        "tsx:debug": "NODE_DEBUG=\"dynamodb:*\"  tsx --trace-uncaught src/index.ts",
+        "tsx:inspect-brk": "NODE_DEBUG=\"dynamodb:*\" tsx --inspect-brk src/index.ts",
         "bun:debug": "bun --bun --inspect-brk run src/index.ts",
-        "bun:db-fresh-start": "bun --bun run src/index.ts @no-action --db-fresh-start",
-        "bun:db-seed": "bun --bun run src/index.ts --db-fresh-start @seed 15 15",
-        "bun:db-export-raw": "bun --bun run src/index.ts @export-raw",
-        "bun:db-export-packed-data": "bun --bun run src/index.ts @export-packed-data",
-        "bun:db-export-unpacked-data": "bun --bun run src/index.ts @export-unpacked-data",
-        "bun:db-import-raw-data-json": "bun --bun run src/index.ts  @import ./assets/raw-data.json --db-fresh-start",
-        "tsx:debug:streams": "NODE_DEBUG=\"dynamodb-local:*\"  tsx --trace-uncaught src/streams-poling.ts",
+        "bun:run": "bun --bun run src/index.ts @no-action",
         "node:test": "node --import tsx/esm --test tests/*.spec.ts"
     },
     "dependencies": {
@@ -23,6 +18,7 @@
         "@smithy/util-base64": "^3.0.0",
         "jest-diff": "^29.7.0",
         "node-fetch": "^3.3.2",
+        "snowflake-sdk": "^1.14.0",
         "tar": "7.4.3"
     },
     "devDependencies": {

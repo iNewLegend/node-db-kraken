@@ -1,18 +1,21 @@
 import {
-    type AttributeValue,
     CreateTableCommand,
     DeleteTableCommand,
-    type DeleteTableCommandOutput,
     DescribeTableCommand,
     DynamoDBClient as DynamoDBClientInternal,
-    type DynamoDBClientResolvedConfig,
     GetItemCommand,
-    type GlobalSecondaryIndex,
     ListTablesCommand,
+    PutItemCommand,
+    ScanCommand,
+    type AttributeValue,
+    type DeleteTableCommandOutput,
+    type DynamoDBClientResolvedConfig,
+    type GlobalSecondaryIndex,
     type LocalSecondaryIndex,
     type ProvisionedThroughput,
-    PutItemCommand,
-    ScanCommand, type ScanCommandInput,
+    type ScanCommandInput,
+    type UpdateTableCommandInput,
+    UpdateTableCommand,
 } from "@aws-sdk/client-dynamodb";
 
 import type { TableDescription } from "@aws-sdk/client-dynamodb/dist-types";
@@ -188,15 +191,29 @@ export class DynamoDBClient {
     }
 
     async list( input: ListTablesInput = {} ) {
-        const command = new ListTablesCommand( input );
+        const allTableNames: string[] = [];
+        let lastEvaluatedTableName: string | undefined;
 
-        debug( "Listing tables...", input );
+        do {
+            const command = new ListTablesCommand( {
+                ... input,
+                ExclusiveStartTableName: lastEvaluatedTableName
+            } );
 
-        const response = await this.client.send( command );
+            debug( "Listing tables...", input );
 
-        debug( "Tables found:", response.TableNames );
+            const response = await this.client.send( command );
 
-        return response.TableNames;
+            if ( response.TableNames ) {
+                allTableNames.push( ... response.TableNames );
+            }
+
+            lastEvaluatedTableName = response.LastEvaluatedTableName;
+        } while ( lastEvaluatedTableName );
+
+        debug( "Tables found:", allTableNames );
+
+        return allTableNames;
     }
 
     public async describe( tableName: string ): Promise<TDynamoDBSchema> {
@@ -249,6 +266,18 @@ export class DynamoDBClient {
                 console.error( `Failed to insert items into ${ tableName }`, error );
             }
         }
+    }
+
+    public async update( input: UpdateTableCommandInput ) {
+        const command = new UpdateTableCommand( input );
+
+        debug( `Updating table: ${ input.TableName }` );
+
+        const response = await this.client.send( command );
+
+        debug( `Table updated successfully: ${ input.TableName }`, response.TableDescription );
+
+        return response.TableDescription;
     }
 
     async getItemById( tableName: string, id: string ) {

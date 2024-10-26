@@ -41,7 +41,7 @@ jobs:
         run: bun install
 
       - name: Export Packed Data
-        run: bun run bun:db-export-unpacked-data
+        run: bun --bun run src/index.ts @dynamodb-export-unpacked-data
 
       - name: Upload assets
         uses: actions/upload-artifact@v3

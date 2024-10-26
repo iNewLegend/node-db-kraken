@@ -352,7 +352,7 @@ const valueGenerators = {
     generateMap,
     generateStringSet,
     generateNumberSet,
-    // generateBinarySet,
+    generateBinarySet,
 };
 
 /**
