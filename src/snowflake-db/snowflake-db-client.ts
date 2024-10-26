@@ -26,7 +26,7 @@ export class SnowflakeClient {
         } );
     }
 
-    async query( sql: string ) {
+    async query( sql: string ): Promise<any> {
         return new Promise( ( resolve, reject ) => {
             this.connection.execute( {
                 sqlText: sql,
