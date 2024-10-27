@@ -1,16 +1,15 @@
-import snowflake from 'snowflake-sdk';
+import snowflake, { type ConnectionOptions } from 'snowflake-sdk';
+
+snowflake.configure( {
+    logLevel: 'INFO',
+    additionalLogToConsole: false,
+    logFilePath: "./logs/snowflake-sdk.log",
+})
 
 export class SnowflakeClient {
     private connection: any;
 
-    constructor( config: {
-        account: string;
-        username: string;
-        password: string;
-        warehouse: string;
-        database: string;
-        schema: string;
-    } ) {
+    constructor( config: ConnectionOptions ) {
         this.connection = snowflake.createConnection( config );
     }
 

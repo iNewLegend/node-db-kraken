@@ -1,4 +1,4 @@
-import * as util from "node:util";
+import type { ConnectionOptions } from "snowflake-sdk";
 import { SnowflakeClient } from "../../snowflake-db/snowflake-db-client";
 
 interface ICompareSide {
@@ -7,10 +7,23 @@ interface ICompareSide {
     schema: string;
 }
 
-interface ICompareSideConfig extends ICompareSide {
+interface ICompareSideConfig extends ConnectionOptions {
     account: string;
     username: string;
     password: string;
+}
+
+interface ISchemaDifferences {
+    missingTables: Set<string>;
+    extraTables: Set<string>;
+    missingColumns: Map<string, string[]>;
+    extraColumns: Map<string, string[]>;
+    typeMismatches: Map<string, { source: string; target: string }>;
+    nullabilityDifferences: Map<string, { source: string; target: string }>;
+}
+
+function isTrackingColumn(columnName: string): boolean {
+    return /_[A-Z]+_SYNCED$/.test(columnName) || /_[A-Z]+_DELETED$/.test(columnName);
 }
 
 async function snowflakeGetSchemaDifferences(
@@ -22,7 +35,7 @@ async function snowflakeGetSchemaDifferences(
 
     await Promise.all([sourceClient.connect(), targetClient.connect()]);
 
-    function getSchemaQuery( config: ICompareSideConfig ) {
+    function getSchemaQuery(config: ICompareSideConfig) {
         const schemaQuery = `
         -- @Language=SnowflakeSQL
         SELECT
@@ -34,37 +47,45 @@ async function snowflakeGetSchemaDifferences(
             numeric_precision,
             numeric_scale
         FROM information_schema.columns
-        WHERE table_schema = '${ config.schema }'
-        AND table_catalog = '${ config.database }'
+        WHERE table_schema = '${config.schema}'
+        AND table_catalog = '${config.database}'
         ORDER BY table_name, ordinal_position;
     `;
         return schemaQuery;
     }
 
-    const [sourceSchema, targetSchema] = await Promise.all([
-        sourceClient.query(getSchemaQuery( sourceConfig )),
-        targetClient.query(getSchemaQuery( targetConfig )),
-    ]);
+    const sourceSchema = (await sourceClient.query(getSchemaQuery(sourceConfig)))
+        .filter((row: any) => !isTrackingColumn(row.COLUMN_NAME));
 
-    const differences = {
+    const targetSchema = (await targetClient.query(getSchemaQuery(targetConfig)))
+        .filter((row: any) => !isTrackingColumn(row.COLUMN_NAME));
+
+    const sourceTables = new Set<string>(sourceSchema.map((row: any) => row.TABLE_NAME));
+    const targetTables = new Set<string>(targetSchema.map((row: any) => row.TABLE_NAME));
+
+    const differences: ISchemaDifferences = {
         missingTables: new Set<string>(),
+        extraTables: new Set<string>(),
         missingColumns: new Map<string, string[]>(),
+        extraColumns: new Map<string, string[]>(),
         typeMismatches: new Map<string, { source: string; target: string }>(),
         nullabilityDifferences: new Map<string, { source: string; target: string }>(),
     };
 
-    // Compare schemas
-    const sourceTables = new Set<string>(sourceSchema.map((row: any) => row.TABLE_NAME));
-    const targetTables = new Set<string>(targetSchema.map((row: any) => row.TABLE_NAME));
-
-    // Find missing tables
+    // Find missing and extra tables
     for (const table of sourceTables) {
         if (!targetTables.has(table)) {
             differences.missingTables.add(table);
         }
     }
 
-    // Compare columns and types
+    for (const table of targetTables) {
+        if (!sourceTables.has(table)) {
+            differences.extraTables.add(table);
+        }
+    }
+
+    // Find missing and extra columns, type mismatches, and nullability differences
     sourceSchema.forEach((sourceCol: any) => {
         const targetCol = targetSchema.find(
             (t: any) => t.TABLE_NAME === sourceCol.TABLE_NAME && t.COLUMN_NAME === sourceCol.COLUMN_NAME
@@ -92,11 +113,22 @@ async function snowflakeGetSchemaDifferences(
         }
     });
 
+    targetSchema.forEach((targetCol: any) => {
+        const sourceCol = sourceSchema.find(
+            (s: any) => s.TABLE_NAME === targetCol.TABLE_NAME && s.COLUMN_NAME === targetCol.COLUMN_NAME
+        );
+
+        if (!sourceCol) {
+            const cols = differences.extraColumns.get(targetCol.TABLE_NAME) || [];
+            cols.push(targetCol.COLUMN_NAME);
+            differences.extraColumns.set(targetCol.TABLE_NAME, cols);
+        }
+    });
+
     return differences;
 }
 
 export async function snowflakeCompareSchemas(commandIndex: number) {
-    // Check arguments,
     const [
         sourceWarehouse,
         sourceDatabase,
@@ -104,13 +136,13 @@ export async function snowflakeCompareSchemas(commandIndex: number) {
         targetWarehouse,
         targetDatabase,
         targetSchema,
-    ] = process.argv.slice( commandIndex + 1 );
+    ] = process.argv.slice(commandIndex + 1);
 
-    if ( ! sourceWarehouse || ! sourceDatabase || ! targetWarehouse || ! targetDatabase || ! sourceSchema || ! targetSchema ) {
+    if (!sourceWarehouse || !sourceDatabase || !targetWarehouse || !targetDatabase || !sourceSchema || !targetSchema) {
         console.error(
             "Usage: snowflake-compare-schemas <sourceWarehouse> <sourceDatabase> <sourceSchema> <targetWarehouse> <targetDatabase> <targetSchema>"
         );
-        process.exit( 1 );
+        process.exit(1);
     }
 
     const source: ICompareSide = {
@@ -126,20 +158,20 @@ export async function snowflakeCompareSchemas(commandIndex: number) {
     };
 
     const sourceConfig = {
-            account: process.env.SNOWFLAKE_ACCOUNT!,
-            username: process.env.SNOWFLAKE_USERNAME!,
-            password: process.env.SNOWFLAKE_PASSWORD!,
-            ... source,
-        },
-        targetConfig = {
-            account: process.env.SNOWFLAKE_ACCOUNT!,
-            username: process.env.SNOWFLAKE_USERNAME!,
-            password: process.env.SNOWFLAKE_PASSWORD!,
-            ... target,
-        };
-    const differences = await snowflakeGetSchemaDifferences( sourceConfig, targetConfig );
+        account: process.env.SNOWFLAKE_ACCOUNT!,
+        username: process.env.SNOWFLAKE_USERNAME!,
+        password: process.env.SNOWFLAKE_PASSWORD!,
+        ...source,
+    };
 
-    // Add this at the end of the function before returning differences:
+    const targetConfig = {
+        account: process.env.SNOWFLAKE_ACCOUNT!,
+        username: process.env.SNOWFLAKE_USERNAME!,
+        password: process.env.SNOWFLAKE_PASSWORD!,
+        ...target,
+    };
+
+    const differences = await snowflakeGetSchemaDifferences(sourceConfig, targetConfig);
 
     console.log("\nSchema Comparison Analysis:");
     console.log("==========================");
@@ -148,7 +180,11 @@ export async function snowflakeCompareSchemas(commandIndex: number) {
         const sections = [];
 
         if (differences.missingTables.size > 0) {
-            sections.push(`❌  Missing Tables (${differences.missingTables.size}):\n${Array.from(differences.missingTables).map(t => `    ❌  ${t}`).join('\n')}`);
+            sections.push(`❌ Missing in Target (${differences.missingTables.size}):\n${Array.from(differences.missingTables).map(t => `    ❌ ${t}`).join('\n')}`);
+        }
+
+        if (differences.extraTables.size > 0) {
+            sections.push(`➕ Extra in Target (${differences.extraTables.size}):\n${Array.from(differences.extraTables).map(t => `    ➕ ${t}`).join('\n')}`);
         }
 
         if (differences.missingColumns.size > 0) {
@@ -156,6 +192,13 @@ export async function snowflakeCompareSchemas(commandIndex: number) {
                 .map(([table, columns]) => `    📋 ${table}: ${columns.join(', ')}`)
                 .join('\n');
             sections.push(`📋 Missing Columns (${differences.missingColumns.size} tables):\n${columnsOutput}`);
+        }
+
+        if (differences.extraColumns.size > 0) {
+            const columnsOutput = Array.from(differences.extraColumns.entries())
+                .map(([table, columns]) => `    ➕ ${table}: ${columns.join(', ')}`)
+                .join('\n');
+            sections.push(`➕ Extra Columns (${differences.extraColumns.size} tables):\n${columnsOutput}`);
         }
 
         if (differences.typeMismatches.size > 0) {
@@ -167,7 +210,7 @@ export async function snowflakeCompareSchemas(commandIndex: number) {
 
         if (differences.nullabilityDifferences.size > 0) {
             const nullabilityOutput = Array.from(differences.nullabilityDifferences.entries())
-                .map(([column, nullability]) => `📊 ${column}: ${nullability.source} → ${nullability.target}`)
+                .map(([column, nullability]) => `    📊 ${column}: ${nullability.source} → ${nullability.target}`)
                 .join('\n');
             sections.push(`📊 Nullability Differences (${differences.nullabilityDifferences.size}):\n${nullabilityOutput}`);
         }
@@ -176,7 +219,9 @@ export async function snowflakeCompareSchemas(commandIndex: number) {
     };
 
     const totalDifferences = differences.missingTables.size +
+        differences.extraTables.size +
         differences.missingColumns.size +
+        differences.extraColumns.size +
         differences.typeMismatches.size +
         differences.nullabilityDifferences.size;
 
