@@ -422,7 +422,7 @@ describe("DynamoDBTypeAnalyzer", () => {
             await t.test(`should return ${expectedFallback} for types ${types}`, async () => {
                 const attributes = types.split(",");
 
-                const analyzedType = await typeAnalyzer.getFallbackType(attributes);
+                const analyzedType = typeAnalyzer.getFallbackType(attributes);
 
                 assert.strictEqual(analyzedType, expectedFallback, `Failed for types: ${types}, sorted: ${ attributes.sort() }`);
             });

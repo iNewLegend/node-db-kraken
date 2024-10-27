@@ -9,6 +9,7 @@ import { seed } from "./commands/dyanmodb/dynamodb-seed";
 import { seedTypes } from "./commands/dyanmodb/dynamodb-seed-types";
 import { mixTypes } from "./commands/dyanmodb/dynamodb-mix-types";
 import { snowflakeAnalyzeTypeTransformations } from "./commands/snowflake/snowflake-analayze-transformations";
+import { snowflakeCompareSchemas } from "./commands/snowflake/snowflake-compare-schemas";
 
 import { DynamoDBClient } from "./dynamo-db/dynamo-db-client";
 
@@ -45,8 +46,8 @@ async function lunchDynamoDBLocal() {
     const dynamoDBLocalServer = new DynamoDBLocalServer(
         dbInternalsExtractPath
             ? {
-                packageExtractPath: dbInternalsExtractPath,
-            }
+                  packageExtractPath: dbInternalsExtractPath,
+              }
             : {}
     );
 
@@ -182,6 +183,10 @@ async function main() {
 
         case "@snowfalke-analyze-transformations":
             await snowflakeAnalyzeTypeTransformations();
+            break;
+
+        case '@snowflake-compare-schemas':
+            await snowflakeCompareSchemas( commandIndex );
             break;
 
         default:
