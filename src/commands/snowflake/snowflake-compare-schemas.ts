@@ -22,6 +22,16 @@ interface ISchemaDifferences {
     nullabilityDifferences: Map<string, { source: string; target: string }>;
 }
 
+function formatTypeWithLength(col: any): string {
+    if (col.CHARACTER_MAXIMUM_LENGTH) {
+        return `${col.DATA_TYPE}(${col.CHARACTER_MAXIMUM_LENGTH})`;
+    }
+    if (col.NUMERIC_PRECISION) {
+        return `${col.DATA_TYPE}(${col.NUMERIC_PRECISION},${col.NUMERIC_SCALE})`;
+    }
+    return col.DATA_TYPE;
+}
+
 function isTrackingColumn(columnName: string): boolean {
     return /_[A-Z]+_SYNCED$/.test(columnName) || /_[A-Z]+_DELETED$/.test(columnName);
 }
@@ -98,10 +108,13 @@ async function snowflakeGetSchemaDifferences(
             return;
         }
 
-        if (sourceCol.DATA_TYPE !== targetCol.DATA_TYPE) {
+        const sourceType = formatTypeWithLength(sourceCol),
+            targetType = formatTypeWithLength(targetCol);
+
+        if (sourceType !== targetType) {
             differences.typeMismatches.set(`${sourceCol.TABLE_NAME}.${sourceCol.COLUMN_NAME}`, {
-                source: sourceCol.DATA_TYPE,
-                target: targetCol.DATA_TYPE,
+                target: targetType,
+                source: sourceType,
             });
         }
 
@@ -203,9 +216,11 @@ export async function snowflakeCompareSchemas(commandIndex: number) {
 
         if (differences.typeMismatches.size > 0) {
             const typesOutput = Array.from(differences.typeMismatches.entries())
-                .map(([column, types]) => `    📊 ${column}: ${types.source} → ${types.target}`)
+                .map(([column, types]) => `    📊 ${column.padEnd(50, ' ' )}\t${types.source}\t→\t${types.target}`)
                 .join('\n');
-            sections.push(`📊 Type Mismatches (${differences.typeMismatches.size}):\n${typesOutput}`);
+            sections.push(`📊 Type Mismatches (${differences.typeMismatches.size}):\n${
+                '    Name'.padEnd(50, ' ') + "\t\tSource\t\t\tTarget\t"
+            }\n${typesOutput}`);
         }
 
         if (differences.nullabilityDifferences.size > 0) {
