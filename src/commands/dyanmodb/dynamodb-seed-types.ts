@@ -88,7 +88,7 @@ function chunkArray<T>( array: T[], size: number ): T[][] {
     );
 }
 
-export async function seedTypes( dbClient: DynamoDBClient ) {
+export async function dynamoDBseedTypes( dbClient: DynamoDBClient ) {
     const combinations = generateCombinations();
     console.log( `Generated ${ combinations.length } type combinations` );
 

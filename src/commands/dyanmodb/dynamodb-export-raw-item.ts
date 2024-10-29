@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import type { DynamoDBClient } from "../../dynamo-db/dynamo-db-client";
 
-export async function exportRawItem( dbClient: DynamoDBClient, commandIndex: number ) {
+export async function dynamoDBexportRawItem( dbClient: DynamoDBClient, commandIndex: number ) {
     const tableName = process.argv[ commandIndex + 1 ];
     const id = process.argv[ commandIndex + 2 ];
 

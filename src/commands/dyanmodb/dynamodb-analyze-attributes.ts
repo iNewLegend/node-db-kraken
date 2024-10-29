@@ -2,7 +2,7 @@ import type { DynamoDBClient } from "../../dynamo-db/dynamo-db-client";
 import type { TDynamoDBPossibleSymbols } from "../../dynamo-db/dynamo-db-object";
 import fs from "node:fs";
 
-export async function analyzeAttributes( dbClient: DynamoDBClient, commandIndex: number ) {
+export async function dynamoDBanalyzeAttributes( dbClient: DynamoDBClient, commandIndex: number ) {
     const tableNameArg = process.argv[ commandIndex + 1 ];
 
     if ( ! tableNameArg ) {

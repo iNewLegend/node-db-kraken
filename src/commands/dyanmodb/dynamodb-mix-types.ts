@@ -7,7 +7,7 @@ function chunkArray<T>( array: T[], size: number ): T[][] {
     );
 }
 
-export async function mixTypes( dbClient: DynamoDBClient ) {
+export async function dynamoDBmixTypes( dbClient: DynamoDBClient ) {
     const tables = await dbClient.list();
     const typeTestTables = tables.filter( t => t.startsWith( 'type-test-' ) );
     const chunks = chunkArray( typeTestTables, 10 );

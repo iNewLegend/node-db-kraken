@@ -39,7 +39,7 @@ function generateAllPossibleCombinations() {
     return combinations;
 }
 
-export async function dynamoDBVerifyMixTypes( dbClient: DynamoDBClient ) {
+export async function dynamoDBverifyMixTypes( dbClient: DynamoDBClient ) {
     const expectedCombinations = generateAllPossibleCombinations();
     const actualTables = await dbClient.list();
     const actualCombinations = new Set(

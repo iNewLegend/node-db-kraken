@@ -2,7 +2,7 @@ import type { DynamoDBClient } from "../../dynamo-db/dynamo-db-client";
 import { DynamoDBObject } from "../../dynamo-db/dynamo-db-object";
 import fs from "node:fs";
 
-export async function exportTransform( dbClient: DynamoDBClient, unpackedMode = false ) {
+export async function dynamoDBexportTransform( dbClient: DynamoDBClient, unpackedMode = false ) {
     function transformToPackedMode( data: any[], partitionKey: string ) {
         return data.map( ( item: any ) => {
             const partitionValue = DynamoDBObject.from( item[ partitionKey ], 0 );

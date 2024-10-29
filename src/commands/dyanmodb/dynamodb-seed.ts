@@ -1,7 +1,7 @@
 import { faker } from "@faker-js/faker";
 import type { DynamoDBClient } from "../../dynamo-db/dynamo-db-client";
 
-export async function seed( dbClient: DynamoDBClient, commandIndex: number ) {
+export async function dynamoDBseed( dbClient: DynamoDBClient, commandIndex: number ) {
     const tablesCount = parseInt( process.argv[ commandIndex + 1 ], 10 ) || 1;
     const itemsCount = parseInt( process.argv[ commandIndex + 2 ], 10 ) || 10;
 

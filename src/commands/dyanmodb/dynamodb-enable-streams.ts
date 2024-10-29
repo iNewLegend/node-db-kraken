@@ -65,7 +65,7 @@ export async function verifyStreams( dbClient: DynamoDBClient ) {
     return results;
 }
 
-export async function enableStreams( dbClient: DynamoDBClient ) {
+export async function dynamoDBenableStreams( dbClient: DynamoDBClient ) {
     const tables = await dbClient.list();
 
     if ( ! tables?.length ) {

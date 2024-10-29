@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import type { DynamoDBClient } from "../../dynamo-db/dynamo-db-client";
 
-export async function exportRaw( dbClient: DynamoDBClient ) {
+export async function dynamoDBexportRaw( dbClient: DynamoDBClient ) {
     const tableNames = await dbClient.list();
 
     if ( ! tableNames?.length ) {

@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import type { DynamoDBClient } from "../../dynamo-db/dynamo-db-client";
 
-export async function importRawData( dbClient: DynamoDBClient, commandIndex: number ) {
+export async function dynamoDBimportRawData( dbClient: DynamoDBClient, commandIndex: number ) {
     const path = process.argv[ commandIndex + 1 ];
 
     if ( ! path ) {
