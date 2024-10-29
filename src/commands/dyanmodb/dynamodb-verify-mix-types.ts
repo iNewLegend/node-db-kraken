@@ -1,5 +1,5 @@
 import type { DynamoDBClient } from "../../dynamo-db/dynamo-db-client";
-import { attributeTypes } from "../../dynamo-db/dynamo-db-types";
+import { attributeTypes } from "../../dynamo-db/dynamo-db-defs.ts";
 
 function generateAllPossibleCombinations() {
     const combinations = new Set<string>();

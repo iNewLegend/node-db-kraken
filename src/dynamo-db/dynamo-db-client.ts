@@ -24,7 +24,7 @@ import type { ListTablesInput } from "@aws-sdk/client-dynamodb/dist-types/models
 
 import * as fs from 'fs/promises';
 import * as util from "node:util";
-import type { TDynamoDBSchema } from "./dynamo-db-types";
+import type { TDynamoDBSchema } from "./dynamo-db-defs.ts";
 
 util.inspect.defaultOptions.depth = 10;
 

@@ -1,6 +1,6 @@
 import type { DynamoDBClient } from "../../dynamo-db/dynamo-db-client";
 import { faker } from "@faker-js/faker";
-import { attributeTypes } from "../../dynamo-db/dynamo-db-types";
+import { attributeTypes } from "../../dynamo-db/dynamo-db-defs.ts";
 
 
 function generateValueForType( type: string ) {
