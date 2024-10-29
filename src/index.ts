@@ -9,6 +9,7 @@ import { dynamoDBseed } from "./commands/dyanmodb/dynamodb-seed";
 import { dynamoDBseedTypes } from "./commands/dyanmodb/dynamodb-seed-types";
 import { dynamoDBmixTypes } from "./commands/dyanmodb/dynamodb-mix-types";
 import { snowflakeAnalyzeTypeTransformations } from "./commands/snowflake/snowflake-analayze-transformations";
+import { snowflakeCompareSchemaData } from "./commands/snowflake/snowflake-compare-data";
 import { snowflakeCompareSchemas } from "./commands/snowflake/snowflake-compare-schemas";
 
 import { DynamoDBClient } from "./dynamo-db/dynamo-db-client";
@@ -187,6 +188,10 @@ async function main() {
 
         case '@snowflake-compare-schemas':
             await snowflakeCompareSchemas( commandIndex );
+            break;
+
+        case '@snowflake-compare-data':
+            await snowflakeCompareSchemaData( commandIndex );
             break;
 
         default:

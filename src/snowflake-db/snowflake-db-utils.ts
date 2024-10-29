@@ -7,3 +7,4 @@ export function snowflakeFormatTypeWithLength( col: any ): string {
     }
     return col.DATA_TYPE;
 }
+

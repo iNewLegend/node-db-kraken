@@ -1,4 +1,3 @@
-import { isTrackingColumn } from "../../common/utils";
 import { SnowflakeClient } from "../../snowflake-db/snowflake-db-client";
 import type { ICompareSide, ICompareSideConfig, ISchemaDifferences } from "../../snowflake-db/snowflake-db-defs";
 import { snowflakeFormatTypeWithLength } from "../../snowflake-db/snowflake-db-utils";
@@ -12,29 +11,8 @@ async function snowflakeGetSchemaDifferences(
 
     await Promise.all( [ sourceClient.connect(), targetClient.connect() ] );
 
-    function getSchemaQuery( config: ICompareSideConfig ) {
-        return `
-        -- @Language=SnowflakeSQL
-        SELECT
-            table_name,
-            column_name,
-            data_type,
-            is_nullable,
-            character_maximum_length,
-            numeric_precision,
-            numeric_scale
-        FROM information_schema.columns
-        WHERE table_schema = '${ config.schema }'
-        AND table_catalog = '${ config.database }'
-        ORDER BY table_name, ordinal_position;
-    `;
-    }
-
-    const sourceSchema = ( await sourceClient.query( getSchemaQuery( sourceConfig ) ) )
-        .filter( ( row: any ) => ! isTrackingColumn( row.COLUMN_NAME ) );
-
-    const targetSchema = ( await targetClient.query( getSchemaQuery( targetConfig ) ) )
-        .filter( ( row: any ) => ! isTrackingColumn( row.COLUMN_NAME ) );
+    const sourceSchema = await sourceClient.snowflakeGetSchema();
+    const targetSchema = await targetClient.snowflakeGetSchema();
 
     const sourceTables = new Set<string>( sourceSchema.map( ( row: any ) => row.TABLE_NAME ) );
     const targetTables = new Set<string>( targetSchema.map( ( row: any ) => row.TABLE_NAME ) );
