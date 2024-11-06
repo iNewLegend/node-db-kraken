@@ -14,6 +14,14 @@ async function snowflakeGetSchemaDifferences(
     const sourceSchema = await sourceClient.snowflakeGetSchema();
     const targetSchema = await targetClient.snowflakeGetSchema();
 
+    // Check if schema not empty
+    if ( Object.keys( sourceSchema ).length === 0 ) {
+        throw new Error( "Source schema is empty" );
+    }
+    if ( Object.keys( targetSchema ).length === 0 ) {
+        throw new Error( "Target schema is empty" );
+    }
+
     const sourceTables = new Set<string>( sourceSchema.map( ( row: any ) => row.TABLE_NAME ) );
     const targetTables = new Set<string>( targetSchema.map( ( row: any ) => row.TABLE_NAME ) );
 
@@ -127,6 +135,20 @@ export async function snowflakeCompareSchemas( commandIndex: number ) {
         password: process.env.SNOWFLAKE_PASSWORD!,
         ... target,
     };
+
+    // Print comparison details
+    console.log( "Source Details:" );
+    console.log( "---------------" );
+    console.log( `Warehouse: ${ sourceConfig.warehouse }` );
+    console.log( `Database: ${ sourceConfig.database }` );
+    console.log( `Schema: ${ sourceConfig.schema }` );
+    console.log( "" );
+    console.log( "Target Details:" );
+    console.log( "---------------" );
+    console.log( `Warehouse: ${ targetConfig.warehouse }` );
+    console.log( `Database: ${ targetConfig.database }` );
+    console.log( `Schema: ${ targetConfig.schema }` );
+    console.log( "" );
 
     const differences = await snowflakeGetSchemaDifferences( sourceConfig, targetConfig );
 
