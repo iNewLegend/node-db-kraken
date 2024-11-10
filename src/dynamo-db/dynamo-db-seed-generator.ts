@@ -204,8 +204,8 @@ const generateString = ( min = 1, max = 254 ): string => {
  * Generates a scalar value of type binary for DynamoDB.
  * @returns {string} - base64 encoded binary data
  */
-const generateBinary = (): string => {
-    const length = faker.number.int( { min: 1, max: 1024 } );
+const generateBinary = ( options = { min: 1, max: 1024 } ): string => {
+    const length = faker.number.int( options );
     return Buffer.from( faker.string.alphanumeric( length ) ).toString( 'base64' );
 };
 
@@ -491,7 +491,7 @@ export {
     generateTableOrIndexName,
     generateNumber,
     generateString,
-    generateBinary,
+    // generateBinary,
     generateBoolean,
     generateNull,
     generateList,
