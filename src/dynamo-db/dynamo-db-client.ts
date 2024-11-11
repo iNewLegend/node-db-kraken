@@ -55,6 +55,10 @@ export class DynamoDBClient extends DynamoDbClientBase {
         return new DynamoDBClient( client );
     }
 
+    public getClient() {
+        return this.client;
+    }
+
     private convertTableDescriptionToCreateTableInput(
         tableDescription: TableDescription
     ) {

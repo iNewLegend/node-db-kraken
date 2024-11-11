@@ -1,5 +1,4 @@
 import { BatchWriteItemCommand } from "@aws-sdk/client-dynamodb";
-import { faker } from "@faker-js/faker";
 import type { DynamoDBClient } from "../../dynamo-db/dynamo-db-client";
 
 export async function dynamoDBseed( dbClient: DynamoDBClient, commandIndex: number ) {

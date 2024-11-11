@@ -1,8 +1,9 @@
 import type { TableDescription, AttributeValue } from '@aws-sdk/client-dynamodb';
 
-import type { SequenceNumberRange, Shard } from '@aws-sdk/client-dynamodb-streams';
+import type { Shard } from '@aws-sdk/client-dynamodb-streams';
 import type { ResponseMetadata } from '@smithy/types/dist-types/response';
 
+export const attributeTypes = [ 'S', 'N', 'B', 'BOOL', 'M', 'L', 'NULL', 'SS', 'NS', 'BS' ];
 
 /**
  * TODO: Probably best solution would be using `node:worker_threads` to parallelize scan requests.
@@ -84,8 +85,7 @@ export interface IStagedCacheData {
     metadata: {
         tableSize: number;
         itemCount: number;
-        lastEvaluatedKey: Record<string, AttributeValue> | undefined;
-        sequenceRange?: SequenceNumberRange;
+        lastEvaluatedShard: Shard;
         timestamp: number;
     };
     schema: {

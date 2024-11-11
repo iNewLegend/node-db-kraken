@@ -3,10 +3,10 @@ import * as util from 'node:util';
 import { AttributeValue } from '@aws-sdk/client-dynamodb';
 
 import {
-    TDynamoDBAttributeType,
-    TDynamoDBDataTypeSymbol,
+    type TDynamoDBAttributeType,
+    type TDynamoDBDataTypeSymbol,
     DYNAMODB_SYMBOLS
-} from './dynamo-db.definitions';
+} from './dynamo-db-defs';
 
 type TRawValue = Record<string, any>;
 
@@ -24,39 +24,39 @@ export abstract class DynamoDBObject {
 
     private readonly currentDepth: number;
 
-    public static getSymbolByKey(key: string): TDynamoDBDataTypeSymbol {
-        return DYNAMODB_SYMBOLS[key as keyof typeof DYNAMODB_SYMBOLS];
+    public static getSymbolByKey( key: string ): TDynamoDBDataTypeSymbol {
+        return DYNAMODB_SYMBOLS[ key as keyof typeof DYNAMODB_SYMBOLS ];
     }
 
     public static getSymbolByAttribute(
         attributeValue: AttributeValue
     ): TDynamoDBDataTypeSymbol {
-        const dataTypeSymbol = (function () {
+        const dataTypeSymbol = ( function () {
             // noinspection LoopStatementThatDoesntLoopJS
-            for (const k in attributeValue) return k as TDynamoDBAttributeType;
+            for ( const k in attributeValue ) return k as TDynamoDBAttributeType;
 
             throw new Error(
-                `Unknown type for attribute value: ${attributeValue}`
+                `Unknown type for attribute value: ${ attributeValue }`
             );
-        })();
+        } )();
 
-        return this.getSymbolByKey(dataTypeSymbol);
+        return this.getSymbolByKey( dataTypeSymbol );
     }
 
-    public static stringify(raw: TRawValue) {
-        return JSON.stringify(raw, (_key, value) => {
-            if (value && typeof value === 'object') {
-                for (const key in value) {
-                    if (Object.prototype.hasOwnProperty.call(value, key)) {
-                        return value[key];
+    public static stringify( raw: TRawValue ) {
+        return JSON.stringify( raw, ( _key, value ) => {
+            if ( value && typeof value === 'object' ) {
+                for ( const key in value ) {
+                    if ( Object.prototype.hasOwnProperty.call( value, key ) ) {
+                        return value[ key ];
                     }
                 }
 
-                throw new Error('Invalid object');
+                throw new Error( 'Invalid object' );
             }
 
             return value;
-        });
+        } );
     }
 
     constructor(
@@ -67,17 +67,17 @@ export abstract class DynamoDBObject {
         this.currentDepth = depth;
 
         let key: TDynamoDBDataTypeSymbol | string = '';
-        for (key in this.raw) {
-            if (Object.prototype.hasOwnProperty.call(this.raw, key)) {
+        for ( key in this.raw ) {
+            if ( Object.prototype.hasOwnProperty.call( this.raw, key ) ) {
                 break;
             }
         }
 
-        this.symbol = DynamoDBObject.getSymbolByKey(key);
+        this.symbol = DynamoDBObject.getSymbolByKey( key );
 
-        if (this.currentDepth >= maxProcessDepth) {
+        if ( this.currentDepth >= maxProcessDepth ) {
             // It means that the rest is packed.
-            switch (this.symbol) {
+            switch ( this.symbol ) {
                 case DYNAMODB_SYMBOLS.M:
                 case DYNAMODB_SYMBOLS.L:
                     this.isByPassed = true;
@@ -85,11 +85,11 @@ export abstract class DynamoDBObject {
             }
         }
 
-        this.raw = Object.freeze(raw);
+        this.raw = Object.freeze( raw );
 
         this.process(
             this.symbol,
-            this.raw[key as keyof typeof DYNAMODB_SYMBOLS]
+            this.raw[ key as keyof typeof DYNAMODB_SYMBOLS ]
         );
     }
 
@@ -99,17 +99,17 @@ export abstract class DynamoDBObject {
         currentDepth: number = this.currentDepth
     ) {
         // Ensure we respect the extender class when creating new instances of `DynamoDBObject`.
-        return new (this.constructor as {
-            new (
+        return new ( this.constructor as {
+            new(
                 raw: TRawValue,
                 maxDepth: number,
                 depth: number
             ): DynamoDBObject;
-        })(raw, maxDepth, currentDepth + 1);
+        } )( raw, maxDepth, currentDepth + 1 );
     }
 
-    private process(symbol: TDynamoDBDataTypeSymbol, rawValue: any) {
-        switch (symbol) {
+    private process( symbol: TDynamoDBDataTypeSymbol, rawValue: any ) {
+        switch ( symbol ) {
             case DYNAMODB_SYMBOLS.S:
             case DYNAMODB_SYMBOLS.N:
             case DYNAMODB_SYMBOLS.B:
@@ -121,51 +121,51 @@ export abstract class DynamoDBObject {
                 this.value = rawValue;
                 break;
             case DYNAMODB_SYMBOLS.M:
-                this.processMap(rawValue);
+                this.processMap( rawValue );
                 break;
 
             case DYNAMODB_SYMBOLS.L:
-                this.processList(rawValue);
+                this.processList( rawValue );
                 break;
 
             default:
                 throw new Error(
-                    `Invalid symbol for value: ${rawValue} orig:\n ${util.inspect(
+                    `Invalid symbol for value: ${ rawValue } orig:\n ${ util.inspect(
                         this.raw,
                         {
                             compact: true,
                             depth: this.maxProcessDepth
                         }
-                    )}`
+                    ) }`
                 );
         }
     }
 
-    private processMap(rawValue: Record<string, any>) {
+    private processMap( rawValue: Record<string, any> ) {
         this.value = {};
 
-        for (const key in rawValue) {
-            this.children[key] = this.create({ ...rawValue[key] });
+        for ( const key in rawValue ) {
+            this.children[ key ] = this.create( { ... rawValue[ key ] } );
 
-            this.value[key] = this.children[key].value;
+            this.value[ key ] = this.children[ key ].value;
         }
     }
 
-    private processList(rawValue: any[]) {
+    private processList( rawValue: any[] ) {
         this.value = [];
 
-        rawValue.forEach((item, index) => {
-            this.children[index] = this.create(rawValue[index]);
+        rawValue.forEach( ( item, index ) => {
+            this.children[ index ] = this.create( rawValue[ index ] );
 
-            this.value[index] = this.children[index].value;
-        });
+            this.value[ index ] = this.children[ index ].value;
+        } );
     }
 
     protected abstract parseImpl(): any;
 
     public parse() {
-        if (this.isByPassed) {
-            return DynamoDBObject.stringify(this.raw);
+        if ( this.isByPassed ) {
+            return DynamoDBObject.stringify( this.raw );
         }
 
         return this.parseImpl();
@@ -175,8 +175,8 @@ export abstract class DynamoDBObject {
         return this.value;
     }
 
-    public getChild(key: string | number) {
-        return this.children[key];
+    public getChild( key: string | number ) {
+        return this.children[ key ];
     }
 
     public getSymbol() {
