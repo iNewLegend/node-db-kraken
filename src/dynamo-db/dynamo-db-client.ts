@@ -1,54 +1,50 @@
+import { DynamoDBClient as DynamoDBClientInternal } from "@aws-sdk/client-dynamodb";
+import * as fs from 'fs/promises';
+import * as util from "node:util";
+
 import {
     CreateTableCommand,
     DeleteTableCommand,
     DescribeTableCommand,
-    DynamoDBClient as DynamoDBClientInternal,
     GetItemCommand,
-    ListTablesCommand,
     PutItemCommand,
     ScanCommand,
     type AttributeValue,
     type DeleteTableCommandOutput,
-    type DynamoDBClientResolvedConfig,
     type GlobalSecondaryIndex,
     type LocalSecondaryIndex,
     type ProvisionedThroughput,
-    type ScanCommandInput,
     type UpdateTableCommandInput,
-    UpdateTableCommand,
+    UpdateTableCommand, type ClientInputEndpointParameters,
 } from "@aws-sdk/client-dynamodb";
 
 import type { TableDescription } from "@aws-sdk/client-dynamodb/dist-types";
-import type { ClientInputEndpointParameters } from "@aws-sdk/client-dynamodb/dist-types/endpoint/EndpointParameters";
-import type { ListTablesInput } from "@aws-sdk/client-dynamodb/dist-types/models/models_0";
 
-import * as fs from 'fs/promises';
-import * as util from "node:util";
-import type { TDynamoDBSchema } from "./dynamo-db-defs.ts";
+import { DynamoDbClientBase } from "./dynamo-db-client-base";
 
 util.inspect.defaultOptions.depth = 10;
 
 const debug = util.debug( 'dynamodb:client' );
 
-export class DynamoDBClient {
-    public static local() {
+export class DynamoDBClient extends DynamoDbClientBase {
+    public static local( endpoint: string = 'http://host.docker.internal:8000' ) {
         const client = new DynamoDBClientInternal( {
             credentials: {
-                accessKeyId: "fakeMyKeyId",
-                secretAccessKey: "fakeSecretAccessKey"
+                accessKeyId: 'fakeMyKeyId',
+                secretAccessKey: 'fakeSecretAccessKey'
             },
-            region: "fakeRegion",
-            endpoint: "http://localhost:8000",
+            region: 'fakeRegion',
+            endpoint
         } );
 
         return new DynamoDBClient( client );
     }
 
     public static awsWithCredentials(
-        region: ClientInputEndpointParameters["region"],
+        region: ClientInputEndpointParameters['region'],
         credentials: {
-            accessKeyId: string,
-            secretAccessKey: string,
+            accessKeyId: string;
+            secretAccessKey: string;
         }
     ) {
         const client = new DynamoDBClientInternal( {
@@ -57,13 +53,6 @@ export class DynamoDBClient {
         } );
 
         return new DynamoDBClient( client );
-    }
-
-    protected constructor( private client: DynamoDBClientInternal ) {
-    }
-
-    public getResolvedConfig(): DynamoDBClientResolvedConfig {
-        return this.client.config;
     }
 
     private convertTableDescriptionToCreateTableInput(
@@ -162,77 +151,6 @@ export class DynamoDBClient {
         await fs.writeFile( filePath, JSON.stringify( tables, null, 2 ) );
 
         debug( "Tables saved successfully." );
-    }
-
-    public async getTableMetrics( tableName: string, strict = true ) {
-        const tableDescription = await this.describe( tableName );
-
-        if ( ! tableDescription ) {
-            throw new Error( `Table ${ tableName } not found.` );
-        }
-
-        const {
-            TableSizeBytes = 0,
-            ItemCount = 0,
-            partitionKey
-        } = tableDescription;
-
-        if ( strict && ( ! TableSizeBytes || ! ItemCount || ! partitionKey ) ) {
-            throw new Error(
-                `Table ${ tableName } does not have required metrics.`
-            );
-        }
-
-        return {
-            tableSizeBytes: TableSizeBytes,
-            itemCount: ItemCount,
-            partitionKey
-        };
-    }
-
-    async list( input: ListTablesInput = {} ) {
-        const allTableNames: string[] = [];
-        let lastEvaluatedTableName: string | undefined;
-
-        do {
-            const command = new ListTablesCommand( {
-                ... input,
-                ExclusiveStartTableName: lastEvaluatedTableName
-            } );
-
-            debug( "Listing tables...", input );
-
-            const response = await this.client.send( command );
-
-            if ( response.TableNames ) {
-                allTableNames.push( ... response.TableNames );
-            }
-
-            lastEvaluatedTableName = response.LastEvaluatedTableName;
-        } while ( lastEvaluatedTableName );
-
-        debug( "Tables found:", allTableNames );
-
-        return allTableNames;
-    }
-
-    public async describe( tableName: string ): Promise<TDynamoDBSchema> {
-        const command = new DescribeTableCommand( { TableName: tableName } );
-
-        debug( `Getting schema for table: ${ tableName }` );
-
-        const { Table } = await this.client.send( command );
-
-        const partitionKey =
-            Table?.KeySchema?.find( ( key ) => key.KeyType === 'HASH' )
-                ?.AttributeName ?? '';
-
-        debug( `Partition key for table ${ tableName }: ${ partitionKey }` );
-
-        return {
-            ... Table,
-            partitionKey
-        };
     }
 
     public async get( tableName: string, key: Record<string, AttributeValue> ) {
@@ -378,53 +296,6 @@ export class DynamoDBClient {
         debug( `Data fetched for table ${ tableName }:`, response.Items );
 
         return response.Items ?? [];
-    }
-
-    public async* scanGenerator(
-        tableName: string,
-        maxChunkSize = 10
-    ): AsyncGenerator<Record<string, AttributeValue>[]> {
-        const items: Record<string, AttributeValue>[] = [];
-
-        let chunkCount = 0;
-
-        let lastEvaluatedKey: Record<string, AttributeValue> | undefined =
-            undefined;
-
-        const input: ScanCommandInput = {
-            TableName: tableName,
-            Limit: maxChunkSize
-        };
-
-        do {
-            if ( lastEvaluatedKey ) {
-                input.ExclusiveStartKey = lastEvaluatedKey;
-            }
-
-            const command = new ScanCommand( input );
-
-            debug(
-                `Fetching data for table: ${ tableName } with limit: ${ maxChunkSize } chunk: ${ chunkCount }`
-            );
-
-            const response = await this.client.send( command );
-
-            debug( `Data fetched for table ${ tableName } chunk:`, chunkCount );
-
-            if ( response.Items?.length ) {
-                yield response.Items;
-
-                items.concat( response.Items );
-            }
-
-            lastEvaluatedKey = response.LastEvaluatedKey;
-
-            ++chunkCount;
-        } while ( lastEvaluatedKey );
-
-        debug( `Total data fetched for table ${ tableName }:`, items );
-
-        return items;
     }
 
     async drop( tableName: string ) {

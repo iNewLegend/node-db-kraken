@@ -1,4 +1,5 @@
 import { dynamoDBanalyzeAttributes } from "./commands/dyanmodb/dynamodb-analyze-attributes";
+import { dynamodbCacheSync } from "./commands/dyanmodb/dynamodb-cache-sync";
 import { dynamoDBverifyMixTypes } from "./commands/dyanmodb/dynamodb-verify-mix-types";
 import { dynamoDBenableStreams } from "./commands/dyanmodb/dynamodb-enable-streams";
 import { dynamoDBexportRaw } from "./commands/dyanmodb/dynamodb-export-raw";
@@ -44,6 +45,7 @@ async function lunchDynamoDBLocal() {
         return;
     }
 
+    // Check if server already running check port online
     const dynamoDBLocalServer = new DynamoDBLocalServer(
         dbInternalsExtractPath
             ? {
@@ -51,6 +53,17 @@ async function lunchDynamoDBLocal() {
             }
             : {}
     );
+
+    try {
+        const isAlreadyRunning = await dynamoDBLocalServer.waitForServerListening( 0, 1000 );
+
+        if ( isAlreadyRunning ) {
+            console.log( "DynamoDB Local is already running." );
+            return;
+        }
+    } catch ( e ) {
+        
+    }
 
     await dynamoDBLocalServer.downloadInternals();
 
@@ -177,6 +190,10 @@ async function main() {
         case "@dynamodb-enable-streams":
             await dynamoDBenableStreams( dbClient );
             break;
+
+        case "@dynamodb-cache-sync":
+            await dynamodbCacheSync( dbClient );
+            break
 
         case "@dynamodb-analyze-attributes":
             await dynamoDBanalyzeAttributes( dbClient, commandIndex );

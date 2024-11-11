@@ -1,16 +1,35 @@
-export class TypeFallbackResolver {
+import {
+    DYNAMODB_SYMBOLS,
+    type TDynamoDBDataTypeSymbol
+} from './dynamo-db.definitions';
+import { DynamoDBObjectParser } from '../utils/dynamo-db-object.parser';
+
+export class DynamoDBTypeFallbackResolver {
     private static readonly TYPE_FLAGS = {
-        B: 1 << 0,      // 1
-        BOOL: 1 << 1,   // 2
-        N: 1 << 2,      // 4
-        S: 1 << 3,      // 8
-        M: 1 << 4,      // 16
-        BS: 1 << 5,     // 32
-        L: 1 << 6,      // 64
-        NS: 1 << 7,     // 128
-        SS: 1 << 8,     // 256
-        NULL: 1 << 9    // 512
-    } as const;
+        [DYNAMODB_SYMBOLS.B]: 1 << 0, // 1
+        [DYNAMODB_SYMBOLS.BOOL]: 1 << 1, // 2
+        [DYNAMODB_SYMBOLS.N]: 1 << 2, // 4
+        [DYNAMODB_SYMBOLS.S]: 1 << 3, // 8
+        [DYNAMODB_SYMBOLS.M]: 1 << 4, // 16
+        [DYNAMODB_SYMBOLS.BS]: 1 << 5, // 32
+        [DYNAMODB_SYMBOLS.L]: 1 << 6, // 64
+        [DYNAMODB_SYMBOLS.NS]: 1 << 7, // 128
+        [DYNAMODB_SYMBOLS.SS]: 1 << 8, // 256
+        [DYNAMODB_SYMBOLS.NULL]: 1 << 9 // 512
+    };
+
+    private static readonly SYMBOLS_TO_FLAGS = {
+        B: DynamoDBTypeFallbackResolver.TYPE_FLAGS[DYNAMODB_SYMBOLS.B],
+        BOOL: DynamoDBTypeFallbackResolver.TYPE_FLAGS[DYNAMODB_SYMBOLS.BOOL],
+        N: DynamoDBTypeFallbackResolver.TYPE_FLAGS[DYNAMODB_SYMBOLS.N],
+        S: DynamoDBTypeFallbackResolver.TYPE_FLAGS[DYNAMODB_SYMBOLS.S],
+        M: DynamoDBTypeFallbackResolver.TYPE_FLAGS[DYNAMODB_SYMBOLS.M],
+        BS: DynamoDBTypeFallbackResolver.TYPE_FLAGS[DYNAMODB_SYMBOLS.BS],
+        L: DynamoDBTypeFallbackResolver.TYPE_FLAGS[DYNAMODB_SYMBOLS.L],
+        NS: DynamoDBTypeFallbackResolver.TYPE_FLAGS[DYNAMODB_SYMBOLS.NS],
+        SS: DynamoDBTypeFallbackResolver.TYPE_FLAGS[DYNAMODB_SYMBOLS.SS],
+        NULL: DynamoDBTypeFallbackResolver.TYPE_FLAGS[DYNAMODB_SYMBOLS.NULL]
+    };
 
     /**
      * Binary mask representing all complex DynamoDB types.
@@ -29,53 +48,63 @@ export class TypeFallbackResolver {
      * ```
      */
     private static readonly COMPLEX_MASK =
-        TypeFallbackResolver.TYPE_FLAGS.BS |
-        TypeFallbackResolver.TYPE_FLAGS.L |
-        TypeFallbackResolver.TYPE_FLAGS.M |
-        TypeFallbackResolver.TYPE_FLAGS.NS |
-        TypeFallbackResolver.TYPE_FLAGS.SS;
+        DynamoDBTypeFallbackResolver.SYMBOLS_TO_FLAGS.BS |
+        DynamoDBTypeFallbackResolver.SYMBOLS_TO_FLAGS.L |
+        DynamoDBTypeFallbackResolver.SYMBOLS_TO_FLAGS.M |
+        DynamoDBTypeFallbackResolver.SYMBOLS_TO_FLAGS.NS |
+        DynamoDBTypeFallbackResolver.SYMBOLS_TO_FLAGS.SS;
 
     // Precomputed type combinations using binary masks.
     private static readonly TYPE_COMBINATIONS: Record<string, number[]> = {
-        'B': [
-            TypeFallbackResolver.TYPE_FLAGS.B,
-            TypeFallbackResolver.TYPE_FLAGS.B | TypeFallbackResolver.TYPE_FLAGS.NULL
+        B: [
+            DynamoDBTypeFallbackResolver.SYMBOLS_TO_FLAGS.B,
+            DynamoDBTypeFallbackResolver.SYMBOLS_TO_FLAGS.B |
+                DynamoDBTypeFallbackResolver.SYMBOLS_TO_FLAGS.NULL
         ],
-        'BOOL': [
-            TypeFallbackResolver.TYPE_FLAGS.BOOL,
-            TypeFallbackResolver.TYPE_FLAGS.BOOL | TypeFallbackResolver.TYPE_FLAGS.NULL
+        BOOL: [
+            DynamoDBTypeFallbackResolver.SYMBOLS_TO_FLAGS.BOOL,
+            DynamoDBTypeFallbackResolver.SYMBOLS_TO_FLAGS.BOOL |
+                DynamoDBTypeFallbackResolver.SYMBOLS_TO_FLAGS.NULL
         ],
-        'N': [
-            TypeFallbackResolver.TYPE_FLAGS.N,
-            TypeFallbackResolver.TYPE_FLAGS.N | TypeFallbackResolver.TYPE_FLAGS.NULL,
-            TypeFallbackResolver.TYPE_FLAGS.BOOL | TypeFallbackResolver.TYPE_FLAGS.N,
-            TypeFallbackResolver.TYPE_FLAGS.BOOL | TypeFallbackResolver.TYPE_FLAGS.N | TypeFallbackResolver.TYPE_FLAGS.NULL
+        N: [
+            DynamoDBTypeFallbackResolver.SYMBOLS_TO_FLAGS.N,
+            DynamoDBTypeFallbackResolver.SYMBOLS_TO_FLAGS.N |
+                DynamoDBTypeFallbackResolver.SYMBOLS_TO_FLAGS.NULL,
+            DynamoDBTypeFallbackResolver.SYMBOLS_TO_FLAGS.BOOL |
+                DynamoDBTypeFallbackResolver.SYMBOLS_TO_FLAGS.N,
+            DynamoDBTypeFallbackResolver.SYMBOLS_TO_FLAGS.BOOL |
+                DynamoDBTypeFallbackResolver.SYMBOLS_TO_FLAGS.N |
+                DynamoDBTypeFallbackResolver.SYMBOLS_TO_FLAGS.NULL
         ]
     };
 
-    private static getTypeFlag( type: string ): number {
-        return this.TYPE_FLAGS[ type as keyof typeof TypeFallbackResolver.TYPE_FLAGS ] || 0;
+    private static getTypeFlag(type: TDynamoDBDataTypeSymbol): number {
+        return this.TYPE_FLAGS[type] || 0;
     }
 
-    private static typesToBitMask( types: string[] ): number {
-        return types.reduce( ( mask, type ) => mask | this.getTypeFlag( type ), 0 );
+    private static typesToBitMask(types: TDynamoDBDataTypeSymbol[]): number {
+        return types.reduce((mask, type) => mask | this.getTypeFlag(type), 0);
     }
 
-    static getFallbackType( types: string[] ): string {
-        const typeMask = this.typesToBitMask( types );
+    static getFallbackType(
+        types: TDynamoDBDataTypeSymbol[]
+    ): TDynamoDBDataTypeSymbol {
+        const typeMask = this.typesToBitMask(types);
 
-        if ( typeMask & this.COMPLEX_MASK ) {
-            return 'M';
+        if (typeMask & this.COMPLEX_MASK) {
+            return DYNAMODB_SYMBOLS.M;
         }
 
         // Check simple type combinations.
-        for ( const [ fallbackType, masks ] of Object.entries( this.TYPE_COMBINATIONS ) ) {
-            if ( masks.includes( typeMask ) ) {
-                return fallbackType;
+        for (const [fallbackType, masks] of Object.entries(
+            this.TYPE_COMBINATIONS
+        )) {
+            if (masks.includes(typeMask)) {
+                return DynamoDBObjectParser.getSymbolByKey(fallbackType);
             }
         }
 
         // Default to S for remaining valid combinations
-        return 'S';
+        return DYNAMODB_SYMBOLS.S;
     }
 }

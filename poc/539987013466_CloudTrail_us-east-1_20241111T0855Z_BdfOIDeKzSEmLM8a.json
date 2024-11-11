@@ -1,0 +1,251 @@
+{
+    "Records": [
+        {
+            "eventVersion": "1.09",
+            "userIdentity": {
+                "type": "AWSService",
+                "invokedBy": "cloudtrail.amazonaws.com"
+            },
+            "eventTime": "2024-11-11T08:51:51Z",
+            "eventSource": "kms.amazonaws.com",
+            "eventName": "GenerateDataKey",
+            "awsRegion": "us-east-1",
+            "sourceIPAddress": "cloudtrail.amazonaws.com",
+            "userAgent": "cloudtrail.amazonaws.com",
+            "requestParameters": {
+                "encryptionContext": {
+                    "aws:cloudtrail:arn": "arn:aws:cloudtrail:us-east-1:539987013466:trail/webhook-test",
+                    "aws:s3:arn": "arn:aws:s3:::aws-cloudtrail-logs-539987013466-387962f3/AWSLogs/539987013466/CloudTrail/us-west-2/2024/11/11/539987013466_CloudTrail_us-west-2_20241111T0850Z_sHpP0SY5FcXV7nPn.json.gz"
+                },
+                "keySpec": "AES_256",
+                "keyId": "arn:aws:kms:us-east-1:539987013466:key/b3be9b30-9cdd-4ab0-bf7c-a439b4d0ec6e"
+            },
+            "responseElements": null,
+            "requestID": "a440bcd4-cd4f-4296-88d2-88836fb39869",
+            "eventID": "cdb47b82-69ff-41bf-a975-1bc17d8d8b7a",
+            "readOnly": true,
+            "resources": [
+                {
+                    "accountId": "539987013466",
+                    "type": "AWS::KMS::Key",
+                    "ARN": "arn:aws:kms:us-east-1:539987013466:key/b3be9b30-9cdd-4ab0-bf7c-a439b4d0ec6e"
+                }
+            ],
+            "eventType": "AwsApiCall",
+            "managementEvent": true,
+            "recipientAccountId": "539987013466",
+            "sharedEventID": "08e3dde2-b1f5-4ec9-9065-f4df6a8a7697",
+            "eventCategory": "Management"
+        },
+        {
+            "eventVersion": "1.10",
+            "userIdentity": {
+                "type": "IAMUser",
+                "principalId": "AIDAX3ON355NOFH4YX3BD",
+                "arn": "arn:aws:iam::539987013466:user/cocotest+hd",
+                "accountId": "539987013466",
+                "accessKeyId": "ASIAX3ON355NAVRCEU4S",
+                "userName": "cocotest+hd",
+                "sessionContext": {
+                    "attributes": {
+                        "creationDate": "2024-11-10T21:26:01Z",
+                        "mfaAuthenticated": "false"
+                    }
+                }
+            },
+            "eventTime": "2024-11-11T08:52:14Z",
+            "eventSource": "dynamodb.amazonaws.com",
+            "eventName": "DescribeTimeToLive",
+            "awsRegion": "us-east-1",
+            "sourceIPAddress": "5.29.21.100",
+            "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+            "requestParameters": {
+                "tableName": "type-test-B"
+            },
+            "responseElements": null,
+            "requestID": "DJJVQ2NICHSOVVM4MUUPIOBHE7VV4KQNSO5AEMVJF66Q9ASUAAJG",
+            "eventID": "3cf5ed68-ea7e-4698-8e86-20e5c09564da",
+            "readOnly": true,
+            "resources": [
+                {
+                    "accountId": "539987013466",
+                    "type": "AWS::DynamoDB::Table",
+                    "ARN": "arn:aws:dynamodb:us-east-1:539987013466:table/type-test-B"
+                }
+            ],
+            "eventType": "AwsApiCall",
+            "apiVersion": "2012-08-10",
+            "managementEvent": true,
+            "recipientAccountId": "539987013466",
+            "eventCategory": "Management",
+            "tlsDetails": {
+                "tlsVersion": "TLSv1.3",
+                "cipherSuite": "TLS_AES_128_GCM_SHA256",
+                "clientProvidedHostHeader": "dynamodb.us-east-1.amazonaws.com"
+            },
+            "sessionCredentialFromConsole": "true"
+        },
+        {
+            "eventVersion": "1.10",
+            "userIdentity": {
+                "type": "IAMUser",
+                "principalId": "AIDAX3ON355NOFH4YX3BD",
+                "arn": "arn:aws:iam::539987013466:user/cocotest+hd",
+                "accountId": "539987013466",
+                "accessKeyId": "ASIAX3ON355NAVRCEU4S",
+                "userName": "cocotest+hd",
+                "sessionContext": {
+                    "attributes": {
+                        "creationDate": "2024-11-10T21:26:01Z",
+                        "mfaAuthenticated": "false"
+                    }
+                }
+            },
+            "eventTime": "2024-11-11T08:52:14Z",
+            "eventSource": "dynamodb.amazonaws.com",
+            "eventName": "ListTables",
+            "awsRegion": "us-east-1",
+            "sourceIPAddress": "5.29.21.100",
+            "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+            "requestParameters": null,
+            "responseElements": null,
+            "requestID": "9UEO54R9C3CDCFUCBTO5KIQ823VV4KQNSO5AEMVJF66Q9ASUAAJG",
+            "eventID": "c111cea7-5cf2-492a-9422-68fa251f7b3b",
+            "readOnly": true,
+            "eventType": "AwsApiCall",
+            "apiVersion": "2012-08-10",
+            "managementEvent": true,
+            "recipientAccountId": "539987013466",
+            "eventCategory": "Management",
+            "tlsDetails": {
+                "tlsVersion": "TLSv1.3",
+                "cipherSuite": "TLS_AES_128_GCM_SHA256",
+                "clientProvidedHostHeader": "dynamodb.us-east-1.amazonaws.com"
+            },
+            "sessionCredentialFromConsole": "true"
+        },
+        {
+            "eventVersion": "1.10",
+            "userIdentity": {
+                "type": "IAMUser",
+                "principalId": "AIDAX3ON355NOFH4YX3BD",
+                "arn": "arn:aws:iam::539987013466:user/cocotest+hd",
+                "accountId": "539987013466",
+                "accessKeyId": "ASIAX3ON355NAVRCEU4S",
+                "userName": "cocotest+hd",
+                "sessionContext": {
+                    "attributes": {
+                        "creationDate": "2024-11-10T21:26:01Z",
+                        "mfaAuthenticated": "false"
+                    }
+                }
+            },
+            "eventTime": "2024-11-11T08:52:14Z",
+            "eventSource": "dynamodb.amazonaws.com",
+            "eventName": "ListTables",
+            "awsRegion": "us-east-1",
+            "sourceIPAddress": "5.29.21.100",
+            "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+            "requestParameters": {
+                "exclusiveStartTableName": "type-test-BOOL-NULL-NS"
+            },
+            "responseElements": null,
+            "requestID": "LABU6EL91JNAQI6I160UQ3MUL7VV4KQNSO5AEMVJF66Q9ASUAAJG",
+            "eventID": "811774bc-2bb1-45b1-8f88-63bf1f154ce4",
+            "readOnly": true,
+            "eventType": "AwsApiCall",
+            "apiVersion": "2012-08-10",
+            "managementEvent": true,
+            "recipientAccountId": "539987013466",
+            "eventCategory": "Management",
+            "tlsDetails": {
+                "tlsVersion": "TLSv1.3",
+                "cipherSuite": "TLS_AES_128_GCM_SHA256",
+                "clientProvidedHostHeader": "dynamodb.us-east-1.amazonaws.com"
+            },
+            "sessionCredentialFromConsole": "true"
+        },
+        {
+            "eventVersion": "1.10",
+            "userIdentity": {
+                "type": "IAMUser",
+                "principalId": "AIDAX3ON355NOFH4YX3BD",
+                "arn": "arn:aws:iam::539987013466:user/cocotest+hd",
+                "accountId": "539987013466",
+                "accessKeyId": "ASIAX3ON355NAVRCEU4S",
+                "userName": "cocotest+hd",
+                "sessionContext": {
+                    "attributes": {
+                        "creationDate": "2024-11-10T21:26:01Z",
+                        "mfaAuthenticated": "false"
+                    }
+                }
+            },
+            "eventTime": "2024-11-11T08:52:15Z",
+            "eventSource": "dynamodb.amazonaws.com",
+            "eventName": "ListTables",
+            "awsRegion": "us-east-1",
+            "sourceIPAddress": "5.29.21.100",
+            "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+            "requestParameters": {
+                "exclusiveStartTableName": "type-test-N-BOOL-SS"
+            },
+            "responseElements": null,
+            "requestID": "UBPI59J8UBF2FRMKQ0PM0SBMSNVV4KQNSO5AEMVJF66Q9ASUAAJG",
+            "eventID": "ba239add-e5f4-4e35-93a7-72d673e7ce0a",
+            "readOnly": true,
+            "eventType": "AwsApiCall",
+            "apiVersion": "2012-08-10",
+            "managementEvent": true,
+            "recipientAccountId": "539987013466",
+            "eventCategory": "Management",
+            "tlsDetails": {
+                "tlsVersion": "TLSv1.3",
+                "cipherSuite": "TLS_AES_128_GCM_SHA256",
+                "clientProvidedHostHeader": "dynamodb.us-east-1.amazonaws.com"
+            },
+            "sessionCredentialFromConsole": "true"
+        },
+        {
+            "eventVersion": "1.10",
+            "userIdentity": {
+                "type": "IAMUser",
+                "principalId": "AIDAX3ON355NOFH4YX3BD",
+                "arn": "arn:aws:iam::539987013466:user/cocotest+hd",
+                "accountId": "539987013466",
+                "accessKeyId": "ASIAX3ON355NAVRCEU4S",
+                "userName": "cocotest+hd",
+                "sessionContext": {
+                    "attributes": {
+                        "creationDate": "2024-11-10T21:26:01Z",
+                        "mfaAuthenticated": "false"
+                    }
+                }
+            },
+            "eventTime": "2024-11-11T08:52:15Z",
+            "eventSource": "dynamodb.amazonaws.com",
+            "eventName": "ListTables",
+            "awsRegion": "us-east-1",
+            "sourceIPAddress": "5.29.21.100",
+            "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+            "requestParameters": {
+                "exclusiveStartTableName": "type-test-S-BOOL-NULL-BS"
+            },
+            "responseElements": null,
+            "requestID": "26JC2U8U40L1B5KKID38DHD2NRVV4KQNSO5AEMVJF66Q9ASUAAJG",
+            "eventID": "eb1d3507-194a-40ee-8248-bea2e84e5106",
+            "readOnly": true,
+            "eventType": "AwsApiCall",
+            "apiVersion": "2012-08-10",
+            "managementEvent": true,
+            "recipientAccountId": "539987013466",
+            "eventCategory": "Management",
+            "tlsDetails": {
+                "tlsVersion": "TLSv1.3",
+                "cipherSuite": "TLS_AES_128_GCM_SHA256",
+                "clientProvidedHostHeader": "dynamodb.us-east-1.amazonaws.com"
+            },
+            "sessionCredentialFromConsole": "true"
+        }
+    ]
+}

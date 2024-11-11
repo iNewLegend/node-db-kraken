@@ -1,0 +1,300 @@
+{
+    "Records": [
+        {
+            "eventVersion": "1.09",
+            "userIdentity": {
+                "type": "AWSService",
+                "invokedBy": "cloudtrail.amazonaws.com"
+            },
+            "eventTime": "2024-11-11T08:51:31Z",
+            "eventSource": "kms.amazonaws.com",
+            "eventName": "GenerateDataKey",
+            "awsRegion": "us-east-1",
+            "sourceIPAddress": "cloudtrail.amazonaws.com",
+            "userAgent": "cloudtrail.amazonaws.com",
+            "requestParameters": {
+                "encryptionContext": {
+                    "aws:cloudtrail:arn": "arn:aws:cloudtrail:us-east-1:539987013466:trail/webhook-test",
+                    "aws:s3:arn": "arn:aws:s3:::aws-cloudtrail-logs-539987013466-387962f3/AWSLogs/539987013466/CloudTrail/us-east-1/2024/11/11/539987013466_CloudTrail_us-east-1_20241111T0855Z_OKYt3yQwUl6W179c.json.gz"
+                },
+                "keySpec": "AES_256",
+                "keyId": "arn:aws:kms:us-east-1:539987013466:key/b3be9b30-9cdd-4ab0-bf7c-a439b4d0ec6e"
+            },
+            "responseElements": null,
+            "requestID": "7d6a9bc9-f9e7-4a8f-8c1e-0c56af1d8eaa",
+            "eventID": "0d9f70a6-11df-4994-b26a-1234fe1769e0",
+            "readOnly": true,
+            "resources": [
+                {
+                    "accountId": "539987013466",
+                    "type": "AWS::KMS::Key",
+                    "ARN": "arn:aws:kms:us-east-1:539987013466:key/b3be9b30-9cdd-4ab0-bf7c-a439b4d0ec6e"
+                }
+            ],
+            "eventType": "AwsApiCall",
+            "managementEvent": true,
+            "recipientAccountId": "539987013466",
+            "sharedEventID": "7f6a9514-39d9-4296-9edc-56781129aaab",
+            "eventCategory": "Management"
+        },
+        {
+            "eventVersion": "1.08",
+            "userIdentity": {
+                "type": "IAMUser",
+                "principalId": "AIDAX3ON355NOFH4YX3BD",
+                "arn": "arn:aws:iam::539987013466:user/cocotest+hd",
+                "accountId": "539987013466",
+                "accessKeyId": "ASIAX3ON355NAVRCEU4S",
+                "userName": "cocotest+hd",
+                "sessionContext": {
+                    "sessionIssuer": {},
+                    "webIdFederationData": {},
+                    "attributes": {
+                        "creationDate": "2024-11-10T21:26:01Z",
+                        "mfaAuthenticated": "false"
+                    }
+                }
+            },
+            "eventTime": "2024-11-11T08:51:19Z",
+            "eventSource": "tagging.amazonaws.com",
+            "eventName": "GetTagKeys",
+            "awsRegion": "us-east-1",
+            "sourceIPAddress": "5.29.21.100",
+            "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+            "requestParameters": {
+                "paginationToken": ""
+            },
+            "responseElements": null,
+            "requestID": "bf53e304-23da-46ba-9810-5a01940717b5",
+            "eventID": "f4ff1717-4941-4839-b26c-2cbc296aabba",
+            "readOnly": true,
+            "eventType": "AwsApiCall",
+            "managementEvent": true,
+            "recipientAccountId": "539987013466",
+            "eventCategory": "Management",
+            "tlsDetails": {
+                "tlsVersion": "TLSv1.3",
+                "cipherSuite": "TLS_AES_128_GCM_SHA256",
+                "clientProvidedHostHeader": "tagging.us-east-1.amazonaws.com"
+            },
+            "sessionCredentialFromConsole": "true"
+        },
+        {
+            "eventVersion": "1.10",
+            "userIdentity": {
+                "type": "AWSService",
+                "invokedBy": "cloudtrail.amazonaws.com"
+            },
+            "eventTime": "2024-11-11T08:51:51Z",
+            "eventSource": "s3.amazonaws.com",
+            "eventName": "GetBucketAcl",
+            "awsRegion": "us-east-1",
+            "sourceIPAddress": "cloudtrail.amazonaws.com",
+            "userAgent": "cloudtrail.amazonaws.com",
+            "requestParameters": {
+                "bucketName": "aws-cloudtrail-logs-539987013466-387962f3",
+                "Host": "aws-cloudtrail-logs-539987013466-387962f3.s3.us-east-1.amazonaws.com",
+                "acl": ""
+            },
+            "responseElements": null,
+            "additionalEventData": {
+                "SignatureVersion": "SigV4",
+                "CipherSuite": "TLS_AES_128_GCM_SHA256",
+                "bytesTransferredIn": 0,
+                "AuthenticationMethod": "AuthHeader",
+                "x-amz-id-2": "JxLa5TEZS3M1uywXYGvtvX8p04evSf0u17Gb76vEIbNFQYBwew+FGcP4d/y0CKJJVMAohFnU31s=",
+                "bytesTransferredOut": 554
+            },
+            "requestID": "KYPHHE3FCZG8FQ9C",
+            "eventID": "a316cb99-c130-4517-8696-49e359fc0dfc",
+            "readOnly": true,
+            "resources": [
+                {
+                    "accountId": "539987013466",
+                    "type": "AWS::S3::Bucket",
+                    "ARN": "arn:aws:s3:::aws-cloudtrail-logs-539987013466-387962f3"
+                }
+            ],
+            "eventType": "AwsApiCall",
+            "managementEvent": true,
+            "recipientAccountId": "539987013466",
+            "sharedEventID": "3f6a7424-38f2-4377-94e7-210ce0b14d22",
+            "eventCategory": "Management"
+        },
+        {
+            "eventVersion": "1.10",
+            "userIdentity": {
+                "type": "IAMUser",
+                "principalId": "AIDAX3ON355NOFH4YX3BD",
+                "arn": "arn:aws:iam::539987013466:user/cocotest+hd",
+                "accountId": "539987013466",
+                "accessKeyId": "ASIAX3ON355NAVRCEU4S",
+                "userName": "cocotest+hd",
+                "sessionContext": {
+                    "attributes": {
+                        "creationDate": "2024-11-10T21:26:01Z",
+                        "mfaAuthenticated": "false"
+                    }
+                }
+            },
+            "eventTime": "2024-11-11T08:52:03Z",
+            "eventSource": "dynamodb.amazonaws.com",
+            "eventName": "DescribeTable",
+            "awsRegion": "us-east-1",
+            "sourceIPAddress": "5.29.21.100",
+            "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+            "requestParameters": {
+                "tableName": "type-test-B"
+            },
+            "responseElements": null,
+            "requestID": "ME1EN3AKIKHT4GGL90LK795PMRVV4KQNSO5AEMVJF66Q9ASUAAJG",
+            "eventID": "ac27ccdc-a488-44ce-888b-bc4091641321",
+            "readOnly": true,
+            "resources": [
+                {
+                    "accountId": "539987013466",
+                    "type": "AWS::DynamoDB::Table",
+                    "ARN": "arn:aws:dynamodb:us-east-1:539987013466:table/type-test-B"
+                }
+            ],
+            "eventType": "AwsApiCall",
+            "apiVersion": "2012-08-10",
+            "managementEvent": true,
+            "recipientAccountId": "539987013466",
+            "eventCategory": "Management",
+            "tlsDetails": {
+                "tlsVersion": "TLSv1.3",
+                "cipherSuite": "TLS_AES_128_GCM_SHA256",
+                "clientProvidedHostHeader": "dynamodb.us-east-1.amazonaws.com"
+            },
+            "sessionCredentialFromConsole": "true"
+        },
+        {
+            "eventVersion": "1.10",
+            "userIdentity": {
+                "type": "IAMUser",
+                "principalId": "AIDAX3ON355NOFH4YX3BD",
+                "arn": "arn:aws:iam::539987013466:user/cocotest+hd",
+                "accountId": "539987013466",
+                "accessKeyId": "ASIAX3ON355NAVRCEU4S",
+                "userName": "cocotest+hd",
+                "sessionContext": {
+                    "attributes": {
+                        "creationDate": "2024-11-10T21:26:01Z",
+                        "mfaAuthenticated": "false"
+                    }
+                }
+            },
+            "eventTime": "2024-11-11T08:52:04Z",
+            "eventSource": "dynamodb.amazonaws.com",
+            "eventName": "DescribeTimeToLive",
+            "awsRegion": "us-east-1",
+            "sourceIPAddress": "5.29.21.100",
+            "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+            "requestParameters": {
+                "tableName": "type-test-B"
+            },
+            "responseElements": null,
+            "requestID": "O532QA877JKG39OKDOLDAKJPMBVV4KQNSO5AEMVJF66Q9ASUAAJG",
+            "eventID": "2fe91d71-2c76-401f-88f0-1a30cf988e71",
+            "readOnly": true,
+            "resources": [
+                {
+                    "accountId": "539987013466",
+                    "type": "AWS::DynamoDB::Table",
+                    "ARN": "arn:aws:dynamodb:us-east-1:539987013466:table/type-test-B"
+                }
+            ],
+            "eventType": "AwsApiCall",
+            "apiVersion": "2012-08-10",
+            "managementEvent": true,
+            "recipientAccountId": "539987013466",
+            "eventCategory": "Management",
+            "tlsDetails": {
+                "tlsVersion": "TLSv1.3",
+                "cipherSuite": "TLS_AES_128_GCM_SHA256",
+                "clientProvidedHostHeader": "dynamodb.us-east-1.amazonaws.com"
+            },
+            "sessionCredentialFromConsole": "true"
+        },
+        {
+            "eventVersion": "1.10",
+            "userIdentity": {
+                "type": "AWSService",
+                "invokedBy": "cloudtrail.amazonaws.com"
+            },
+            "eventTime": "2024-11-11T08:54:20Z",
+            "eventSource": "s3.amazonaws.com",
+            "eventName": "GetBucketAcl",
+            "awsRegion": "us-east-1",
+            "sourceIPAddress": "cloudtrail.amazonaws.com",
+            "userAgent": "cloudtrail.amazonaws.com",
+            "requestParameters": {
+                "bucketName": "aws-cloudtrail-logs-539987013466-387962f3",
+                "Host": "aws-cloudtrail-logs-539987013466-387962f3.s3.us-east-1.amazonaws.com",
+                "acl": ""
+            },
+            "responseElements": null,
+            "additionalEventData": {
+                "SignatureVersion": "SigV4",
+                "CipherSuite": "TLS_AES_128_GCM_SHA256",
+                "bytesTransferredIn": 0,
+                "AuthenticationMethod": "AuthHeader",
+                "x-amz-id-2": "GyZ7HSbLjn3+9NP6mB4bTnYGitvxqMDmxzVsKznEqL2DDdz2mxMS8NsuSYomGWH+XuOau2hC+AE=",
+                "bytesTransferredOut": 554
+            },
+            "requestID": "0PJAX73RC5F4J4WV",
+            "eventID": "f641041b-e59f-4913-9656-8ae6cb6120f9",
+            "readOnly": true,
+            "resources": [
+                {
+                    "accountId": "539987013466",
+                    "type": "AWS::S3::Bucket",
+                    "ARN": "arn:aws:s3:::aws-cloudtrail-logs-539987013466-387962f3"
+                }
+            ],
+            "eventType": "AwsApiCall",
+            "managementEvent": true,
+            "recipientAccountId": "539987013466",
+            "sharedEventID": "c3fb5609-b12c-4387-b1b5-2f0d979c7b51",
+            "eventCategory": "Management"
+        },
+        {
+            "eventVersion": "1.09",
+            "userIdentity": {
+                "type": "AWSService",
+                "invokedBy": "cloudtrail.amazonaws.com"
+            },
+            "eventTime": "2024-11-11T08:56:03Z",
+            "eventSource": "kms.amazonaws.com",
+            "eventName": "GenerateDataKey",
+            "awsRegion": "us-east-1",
+            "sourceIPAddress": "cloudtrail.amazonaws.com",
+            "userAgent": "cloudtrail.amazonaws.com",
+            "requestParameters": {
+                "keyId": "arn:aws:kms:us-east-1:539987013466:key/b3be9b30-9cdd-4ab0-bf7c-a439b4d0ec6e",
+                "encryptionContext": {
+                    "aws:cloudtrail:arn": "arn:aws:cloudtrail:us-east-1:539987013466:trail/webhook-test",
+                    "aws:s3:arn": "arn:aws:s3:::aws-cloudtrail-logs-539987013466-387962f3/AWSLogs/539987013466/CloudTrail/us-east-1/2024/11/11/539987013466_CloudTrail_us-east-1_20241111T0900Z_ijsrFF1C19PHutgw.json.gz"
+                },
+                "keySpec": "AES_256"
+            },
+            "responseElements": null,
+            "requestID": "3b175b5e-7737-4d49-9c71-d34b361b64a0",
+            "eventID": "5b5f9975-d074-474b-b0ec-1c86cf47ee0e",
+            "readOnly": true,
+            "resources": [
+                {
+                    "accountId": "539987013466",
+                    "type": "AWS::KMS::Key",
+                    "ARN": "arn:aws:kms:us-east-1:539987013466:key/b3be9b30-9cdd-4ab0-bf7c-a439b4d0ec6e"
+                }
+            ],
+            "eventType": "AwsApiCall",
+            "managementEvent": true,
+            "recipientAccountId": "539987013466",
+            "sharedEventID": "3abb6bf5-6ddd-4965-8704-c9bdff6b3f36",
+            "eventCategory": "Management"
+        }
+    ]
+}

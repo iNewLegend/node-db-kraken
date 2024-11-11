@@ -14,8 +14,7 @@ export async function verifyStreams( dbClient: DynamoDBClient ) {
         return;
     }
 
-    const typeTestTables = tables.filter( t => t.startsWith( 'type-test-' ) );
-    const chunks = chunkArray( typeTestTables, 10 );
+    const chunks = chunkArray( tables, 10 );
 
     const results = [];
     let processed = 0;
@@ -27,7 +26,7 @@ export async function verifyStreams( dbClient: DynamoDBClient ) {
             const description = await dbClient.describe( table );
             processed++;
 
-            console.log( `Verified ${ table } (${ processed }/${ typeTestTables.length })` );
+            console.log( `Verified ${ table } (${ processed }/${ tables.length })` );
 
             return {
                 tableName: table,
@@ -73,8 +72,7 @@ export async function dynamoDBenableStreams( dbClient: DynamoDBClient ) {
         return;
     }
 
-    const typeTestTables = tables.filter( t => t.startsWith( 'type-test-' ) );
-    const chunks = chunkArray( typeTestTables, 10 ); // Process 10 tables at a time
+    const chunks = chunkArray( tables, 10 ); // Process 10 tables at a time
 
     let processed = 0;
 
@@ -91,7 +89,7 @@ export async function dynamoDBenableStreams( dbClient: DynamoDBClient ) {
                     }
                 } );
                 processed++;
-                console.log( `Enabled streams for ${ table } (${ processed }/${ typeTestTables.length })` );
+                console.log( `Enabled streams for ${ table } (${ processed }/${ tables.length })` );
             } catch ( e ) {
                 if ( e instanceof Error && e.message.includes( 'Table already has an enabled' ) ) {
                     console.log( `Skipping ${ table }: ${ e.message }` );

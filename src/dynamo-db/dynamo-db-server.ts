@@ -222,6 +222,7 @@ export class DynamoDBLocalServer {
         }
 
         const javaArgs = [
+            '-Xmx4048m',
             '-Djava.library.path=./DynamoDBLocal_lib',
             '-jar',
             dynamoInternalsJAR,
@@ -317,7 +318,7 @@ export class DynamoDBLocalServer {
         for ( let i = 0 ; i < ( retryCount + 1 ) ; i++ ) {
             try {
                 await tryConnect()
-                return;
+                return true;
             } catch ( e ) {
             }
 

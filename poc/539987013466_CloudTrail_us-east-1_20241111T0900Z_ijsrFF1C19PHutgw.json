@@ -1,0 +1,219 @@
+{
+    "Records": [
+        {
+            "eventVersion": "1.10",
+            "userIdentity": {
+                "type": "IAMUser",
+                "principalId": "AIDAX3ON355NOFH4YX3BD",
+                "arn": "arn:aws:iam::539987013466:user/cocotest+hd",
+                "accountId": "539987013466",
+                "accessKeyId": "ASIAX3ON355NAVRCEU4S",
+                "userName": "cocotest+hd",
+                "sessionContext": {
+                    "attributes": {
+                        "creationDate": "2024-11-10T21:26:01Z",
+                        "mfaAuthenticated": "false"
+                    }
+                }
+            },
+            "eventTime": "2024-11-11T08:50:52Z",
+            "eventSource": "dynamodb.amazonaws.com",
+            "eventName": "DescribeTimeToLive",
+            "awsRegion": "us-east-1",
+            "sourceIPAddress": "5.29.21.100",
+            "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+            "requestParameters": {
+                "tableName": "type-test-B-BOOL-SS-BS"
+            },
+            "responseElements": null,
+            "requestID": "PETAB7B7KEP5E62M0DVANU90B3VV4KQNSO5AEMVJF66Q9ASUAAJG",
+            "eventID": "13be2a02-6561-47cf-bc78-d64211a631e7",
+            "readOnly": true,
+            "resources": [
+                {
+                    "accountId": "539987013466",
+                    "type": "AWS::DynamoDB::Table",
+                    "ARN": "arn:aws:dynamodb:us-east-1:539987013466:table/type-test-B-BOOL-SS-BS"
+                }
+            ],
+            "eventType": "AwsApiCall",
+            "apiVersion": "2012-08-10",
+            "managementEvent": true,
+            "recipientAccountId": "539987013466",
+            "eventCategory": "Management",
+            "tlsDetails": {
+                "tlsVersion": "TLSv1.3",
+                "cipherSuite": "TLS_AES_128_GCM_SHA256",
+                "clientProvidedHostHeader": "dynamodb.us-east-1.amazonaws.com"
+            },
+            "sessionCredentialFromConsole": "true"
+        },
+        {
+            "eventVersion": "1.08",
+            "userIdentity": {
+                "type": "AWSService",
+                "invokedBy": "dynamodb.application-autoscaling.amazonaws.com"
+            },
+            "eventTime": "2024-11-11T08:52:08Z",
+            "eventSource": "sts.amazonaws.com",
+            "eventName": "AssumeRole",
+            "awsRegion": "us-east-1",
+            "sourceIPAddress": "dynamodb.application-autoscaling.amazonaws.com",
+            "userAgent": "dynamodb.application-autoscaling.amazonaws.com",
+            "requestParameters": {
+                "roleArn": "arn:aws:iam::539987013466:role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable",
+                "roleSessionName": "AutoScaling-RetrieveCurrentCapacity",
+                "durationSeconds": 900
+            },
+            "responseElements": {
+                "credentials": {
+                    "accessKeyId": "ASIAX3ON355NBFX6ZJVM",
+                    "sessionToken": "IQoJb3JpZ2luX2VjEBkaCXVzLWVhc3QtMSJIMEYCIQDshT2jHzCnRvOVtAqDS8fV9OcpHM+iSyfYDCvLfFHyZQIhALaZHoG/Rala1tD4wmelenEMolDyiV2KnejJ2/tWp6sUKqQDCKL//////////wEQABoMNTM5OTg3MDEzNDY2IgxfKzPjRH7jydp9fRcq+ALaA5RwbZJ9lRJ/9UB/oGnBalZna8r/QBTeszt1bflEqSNokWW7lluW7gUK9NX7lpxCcAbGZqG6IVY2NC1/OSMc4WH6+4tJaRORuhPnPSlELh2mMBGPXDc7i1cDW+gErnsmYX275InTMAmByzByH48NwRaQwENuB5lFoXRRB0qAifpdqpLkTslCRRt1vzGQmKuxgO+K+DX0CGuXWpMKc1zwwkQIPjJRn9BlhcBbDPGNnDy/uvEHBqRsqzTKGiwrM3yVxg0WeTf8PSg9nXz9pH/B5AaEh+DrhmQAgXQtazYER0KRzYhQPHTGjkTeZaxlZ01V5ls3UjyzxiPLUhPivECMEsDw4fqR2SnpbsL5fd77l6N1EnwKXQdSF1eK9Ak4kZVy3xikOtVmSS6fpa7N1j8FP040BExiYUMkVPRgoVFMPwVn84sTMP8cbSvUzM7vVWbNBm/CBWLKs6K86FmBvj94JkZcOOnpIXQzl79azXg0Snhe2ayng3HuMLiLx7kGOr0BwHq/oPkozLB524/0QBgVnBWVMK2aPG8R3FOBcm8Ke6jU+3vwJVxYGi82Es8nOCot68fC/9pAOwE9sRCHu9RmnAqTgPKODo9nZi3zGO05N6Hss2LSEpbs7tTHTJml+qqME47eMRp84awDz5HyCnq6CXPw1gCROGcZokA/8H49LI4IU7fc1SeTzIsdzrGrX+wqEQ2vsDzV68w+6gFALHaM2yrBIpqGns4D6m31bDOpGBOBdv+a3OxCZ/6KIOdc",
+                    "expiration": "Nov 11, 2024, 9:07:08 AM"
+                },
+                "assumedRoleUser": {
+                    "assumedRoleId": "AROAX3ON355NDL56YVSKW:AutoScaling-RetrieveCurrentCapacity",
+                    "arn": "arn:aws:sts::539987013466:assumed-role/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable/AutoScaling-RetrieveCurrentCapacity"
+                }
+            },
+            "requestID": "3d17ebca-27a9-4add-a21e-017c09401135",
+            "eventID": "c424e893-b12e-3d28-8780-04d9d69c6fc6",
+            "readOnly": true,
+            "resources": [
+                {
+                    "accountId": "539987013466",
+                    "type": "AWS::IAM::Role",
+                    "ARN": "arn:aws:iam::539987013466:role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable"
+                }
+            ],
+            "eventType": "AwsApiCall",
+            "managementEvent": true,
+            "recipientAccountId": "539987013466",
+            "sharedEventID": "b93aa0bd-684b-433a-a369-aa2f39f25732",
+            "eventCategory": "Management"
+        },
+        {
+            "eventVersion": "1.08",
+            "userIdentity": {
+                "type": "IAMUser",
+                "principalId": "AIDAX3ON355NOFH4YX3BD",
+                "arn": "arn:aws:iam::539987013466:user/cocotest+hd",
+                "accountId": "539987013466",
+                "accessKeyId": "ASIAX3ON355NAVRCEU4S",
+                "userName": "cocotest+hd",
+                "sessionContext": {
+                    "sessionIssuer": {},
+                    "webIdFederationData": {},
+                    "attributes": {
+                        "creationDate": "2024-11-10T21:26:01Z",
+                        "mfaAuthenticated": "false"
+                    }
+                }
+            },
+            "eventTime": "2024-11-11T08:52:15Z",
+            "eventSource": "tagging.amazonaws.com",
+            "eventName": "GetTagKeys",
+            "awsRegion": "us-east-1",
+            "sourceIPAddress": "5.29.21.100",
+            "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+            "requestParameters": {
+                "paginationToken": ""
+            },
+            "responseElements": null,
+            "requestID": "4df2d6ea-0b3e-4f77-a8b2-61258f03d7c8",
+            "eventID": "6290e5f7-aa3a-4ea1-b523-dbf749737513",
+            "readOnly": true,
+            "eventType": "AwsApiCall",
+            "managementEvent": true,
+            "recipientAccountId": "539987013466",
+            "eventCategory": "Management",
+            "tlsDetails": {
+                "tlsVersion": "TLSv1.3",
+                "cipherSuite": "TLS_AES_128_GCM_SHA256",
+                "clientProvidedHostHeader": "tagging.us-east-1.amazonaws.com"
+            },
+            "sessionCredentialFromConsole": "true"
+        },
+        {
+            "eventVersion": "1.09",
+            "userIdentity": {
+                "type": "AWSService",
+                "invokedBy": "cloudtrail.amazonaws.com"
+            },
+            "eventTime": "2024-11-11T08:55:05Z",
+            "eventSource": "kms.amazonaws.com",
+            "eventName": "GenerateDataKey",
+            "awsRegion": "us-east-1",
+            "sourceIPAddress": "cloudtrail.amazonaws.com",
+            "userAgent": "cloudtrail.amazonaws.com",
+            "requestParameters": {
+                "keyId": "arn:aws:kms:us-east-1:539987013466:key/b3be9b30-9cdd-4ab0-bf7c-a439b4d0ec6e",
+                "keySpec": "AES_256",
+                "encryptionContext": {
+                    "aws:cloudtrail:arn": "arn:aws:cloudtrail:us-east-1:539987013466:trail/webhook-test",
+                    "aws:s3:arn": "arn:aws:s3:::aws-cloudtrail-logs-539987013466-387962f3/AWSLogs/539987013466/CloudTrail/us-east-1/2024/11/11/539987013466_CloudTrail_us-east-1_20241111T0855Z_7rc6c83Rht6UiCby.json.gz"
+                }
+            },
+            "responseElements": null,
+            "requestID": "2e367c0f-94aa-40ae-80b6-8ba38c966c85",
+            "eventID": "85acb163-8d9b-4ed0-a93e-9c9e8f348f17",
+            "readOnly": true,
+            "resources": [
+                {
+                    "accountId": "539987013466",
+                    "type": "AWS::KMS::Key",
+                    "ARN": "arn:aws:kms:us-east-1:539987013466:key/b3be9b30-9cdd-4ab0-bf7c-a439b4d0ec6e"
+                }
+            ],
+            "eventType": "AwsApiCall",
+            "managementEvent": true,
+            "recipientAccountId": "539987013466",
+            "sharedEventID": "1b0fed66-11e2-44ed-9df5-9bd738d4bc8a",
+            "eventCategory": "Management"
+        },
+        {
+            "eventVersion": "1.08",
+            "userIdentity": {
+                "type": "AWSService",
+                "invokedBy": "dynamodb.application-autoscaling.amazonaws.com"
+            },
+            "eventTime": "2024-11-11T08:55:33Z",
+            "eventSource": "sts.amazonaws.com",
+            "eventName": "AssumeRole",
+            "awsRegion": "us-east-1",
+            "sourceIPAddress": "dynamodb.application-autoscaling.amazonaws.com",
+            "userAgent": "dynamodb.application-autoscaling.amazonaws.com",
+            "requestParameters": {
+                "roleArn": "arn:aws:iam::539987013466:role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable",
+                "roleSessionName": "AutoScaling-RetrieveCurrentCapacity",
+                "durationSeconds": 900
+            },
+            "responseElements": {
+                "credentials": {
+                    "accessKeyId": "ASIAX3ON355NOOWBMRLR",
+                    "sessionToken": "IQoJb3JpZ2luX2VjEBkaCXVzLWVhc3QtMSJHMEUCIQDfD9tly07ChpHtaFH0bC2Q2XKJpV1C6zGUDDxx5nEN7AIgIyUzglzjdgchUJ+x2bPr+1OgTzLsa9cO5sBNcTCLKREqpAMIov//////////ARAAGgw1Mzk5ODcwMTM0NjYiDCqxDX/fNp1d6ILhDCr4AjIpn7kzznPi2soatYaUo/VO5LGZHJ+4V8ZTexr3Mk0feouNcVf34FQ2flkHezsan4BG30THXvbwKvNg3EHppm824EFyMLKkZtp08/ops+kDXHlcNZNuam/wvVhaIIRNcghZ2yahvhWmgcTmUcwcX0Aibr8wCTazvVN6cX3udKnYdt32QDvkq2FvgOdsiTMOf1+MG13nDCxvUFyGy7yVU4a04Gvq9irg3NJbIQpCUXpsADtokxoiQITO4Zp9NR0gNQx923XlAPHHOUsvI9Qa8eX7k8bKE/lIrwk6OqRQGpKm4WACbkbn5HpdquX/ZQHBQjAT2+MkA/daiBG0W3mbDALATQo3mu0870muw6gBjN/EIKuZ/pjYyKHjmFoTXH1rUYvCyW0KcZPkYyUPev6XENWmRT2ckpMjVFIJsYIH3CPX0j8dZ50kcOHQ5tsIkMGNpzOmdaeoVSVXICAYW5EpJjRosxPVD0hLknxUQGWlhuylcGxwn76YHigwhY3HuQY6vgHXfQUYClyi25zXAXSCxJ58NW3lz+y4MDTPPGvINv9rNIpWZnfMny21wy1Ou87qCuIRi1wdWX98/xM/hJnMwxB+oEH19D6/jVMHP4msl/Vwi7d7qoH+/oidVNd3z5p31hU0hwZujP28U1ZC77pt8PD2jnev1/LF3esfUmLnorFylu/aEq54ZscK+PfKLgK2eGiatZKiKigDMVm7uP4knWdvuesMj7jWRY0FS1xCWXqDUjnKFGPO4SKvmUKiwvbI",
+                    "expiration": "Nov 11, 2024, 9:10:33 AM"
+                },
+                "assumedRoleUser": {
+                    "assumedRoleId": "AROAX3ON355NDL56YVSKW:AutoScaling-RetrieveCurrentCapacity",
+                    "arn": "arn:aws:sts::539987013466:assumed-role/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable/AutoScaling-RetrieveCurrentCapacity"
+                }
+            },
+            "requestID": "c3db40e9-9f95-4b7f-9aab-dd65168e2427",
+            "eventID": "56d37fc2-eaa0-3f59-b27d-c5d56a0d95a2",
+            "readOnly": true,
+            "resources": [
+                {
+                    "accountId": "539987013466",
+                    "type": "AWS::IAM::Role",
+                    "ARN": "arn:aws:iam::539987013466:role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable"
+                }
+            ],
+            "eventType": "AwsApiCall",
+            "managementEvent": true,
+            "recipientAccountId": "539987013466",
+            "sharedEventID": "2afacd64-793d-4fc0-9ec4-b69aa61b7b28",
+            "eventCategory": "Management"
+        }
+    ]
+}

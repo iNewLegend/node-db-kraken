@@ -20,3 +20,4 @@ export interface ISchemaDifferences {
     typeMismatches: Map<string, { source: string; target: string }>;
     nullabilityDifferences: Map<string, { source: string; target: string }>;
 }
+
