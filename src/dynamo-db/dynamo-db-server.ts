@@ -1,4 +1,4 @@
-import { exec, spawn } from "node:child_process";
+import {exec, spawn} from "node:child_process";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as crypto from "node:crypto";
@@ -11,7 +11,7 @@ import fetch from "node-fetch";
 
 const NODE_MODULES_DIR_PATH = process.cwd() + "/node_modules";
 
-const debug = util.debug( 'dynamodb:server' );
+const debug = util.debug('dynamodb:server');
 
 interface IDynamoDBLocalServerArgs {
     packageURL?: string,
@@ -25,7 +25,7 @@ interface IDynamoDBLocalServerArgs {
 
 const DEFAULT_LOCAL_SERVER_ARGS: Required<IDynamoDBLocalServerArgs> = {
     packageURL: "https://d1ni2b6xgvw0s0.cloudfront.net/v2.x/dynamodb_local_latest.tar.gz",
-    packageChecksum: "f5296028d645bb2d3f99fede0a36945956eb7386174430e75c00e6fb1b34e78d",
+    packageChecksum: "875cb27dc7843d0d24263f0e1521280f9bfdf0ebf0e69fbd1b4cb00e7c8658e0",
     packageTmpPath: "/tmp/dynamodb_local_latest.tar.gz",
     packageExtractPath: NODE_MODULES_DIR_PATH + "/.bin/dynamodb-local",
     port: 8000,
@@ -40,185 +40,186 @@ export class DynamoDBLocalServer {
 
     private isTerminateProcessing = false;
 
-    public constructor( args: IDynamoDBLocalServerArgs = {} ) {
-        Object.assign( this.args, DEFAULT_LOCAL_SERVER_ARGS, args );
+    public constructor(args: IDynamoDBLocalServerArgs = {}) {
+        Object.assign(this.args, DEFAULT_LOCAL_SERVER_ARGS, args);
 
         const terminate = async () => {
-            if ( this.isTerminateProcessing ) {
-                console.log( "Already terminating..." );
+            if (this.isTerminateProcessing) {
+                console.log("Already terminating...");
                 return;
             }
             this.isTerminateProcessing = true;
-            console.info( "\nShutting down..." );
+            console.info("\nShutting down...");
             await this.stop();
         }
 
-        process.on( "SIGINT", terminate.bind( this ) );
-        process.on( "SIGTERM", terminate.bind( this ) );
+        process.on("SIGINT", terminate.bind(this));
+        process.on("SIGTERM", terminate.bind(this));
     }
 
     private handleEmptyDirectoryCleanup() {
         try {
-            if ( fs.readdirSync( this.args.packageExtractPath ).length === 0 ) {
+            if (fs.readdirSync(this.args.packageExtractPath).length === 0) {
                 // Remove the LOCAL_DIR if it's empty
-                fs.rmSync( this.args.packageExtractPath, { recursive: true } );
+                fs.rmSync(this.args.packageExtractPath, {recursive: true});
             }
-        } catch ( e ) {
+        } catch (e) {
         }
     }
 
-    private calculateChecksum( filePath: string ): Promise<string> {
-        return new Promise( ( resolve, reject ) => {
-            const hash = crypto.createHash( 'sha256' );
-            const stream = fs.createReadStream( filePath );
+    private calculateChecksum(filePath: string): Promise<string> {
+        return new Promise((resolve, reject) => {
+            const hash = crypto.createHash('sha256');
+            const stream = fs.createReadStream(filePath);
 
-            stream.on( 'data', data => hash.update( data ) );
-            stream.on( 'end', () => resolve( hash.digest( 'hex' ) ) );
-            stream.on( 'error', reject );
-        } );
+            stream.on('data', data => hash.update(data));
+            stream.on('end', () => resolve(hash.digest('hex')));
+            stream.on('error', reject);
+        });
     }
 
-    private validChecksum( filePath: string, expectedChecksum: string = this.args.packageChecksum ) {
-        return new Promise<void>( async ( resolve, reject ) => {
+    private validChecksum(filePath: string, expectedChecksum: string = this.args.packageChecksum) {
+        return new Promise<void>(async (resolve, reject) => {
             try {
-                const calculatedChecksum = await this.calculateChecksum( filePath );
-                if ( calculatedChecksum === expectedChecksum ) {
+                const calculatedChecksum = await this.calculateChecksum(filePath);
+                if (calculatedChecksum === expectedChecksum) {
                     resolve();
                 } else {
-                    reject( `Checksum mismatch: expected ${ expectedChecksum }, but got ${ calculatedChecksum }` );
+                    reject(`Checksum mismatch: expected ${expectedChecksum}, but got ${calculatedChecksum}`);
                 }
-            } catch ( error ) {
-                reject( `Error calculating checksum ${ util.inspect( error ) }` );
+            } catch (error) {
+                reject(`Error calculating checksum ${util.inspect(error)}`);
             }
-        } );
+        });
     }
 
-    private extractPackage( filePath: string, options = { ensurePathExists: true } ) {
-        if ( options.ensurePathExists && ! fs.existsSync( this.args.packageExtractPath ) ) {
-            fs.mkdirSync( this.args.packageExtractPath, { recursive: true } );
+    private extractPackage(filePath: string, options = {ensurePathExists: true}) {
+        if (options.ensurePathExists && !fs.existsSync(this.args.packageExtractPath)) {
+            fs.mkdirSync(this.args.packageExtractPath, {recursive: true});
         }
 
-        return new Promise<void>( ( resolve, reject ) => {
-            tar.x( {
+        return new Promise<void>((resolve, reject) => {
+            tar.x({
                     file: filePath,
                     cwd: this.args.packageExtractPath
-                }, ( error ) => {
-                    if ( error ) {
-                        reject( `Extraction error: ${ error.message }` );
+                }, (error) => {
+                    if (error) {
+                        reject(`Extraction error: ${error.message}`);
                     } else {
-                        debug( `Extraction completed.` );
+                        debug(`Extraction completed.`);
                         resolve();
                     }
                 }
             )
-        } )
+        })
     }
 
-    private async downloadWithProgress( url: string = this.args.packageURL, targetPath: string = this.args.packageTmpPath ) {
-        const res = await fetch( url, {
+    private async downloadWithProgress(url: string = this.args.packageURL,
+                                       targetPath: string = this.args.packageTmpPath) {
+        const res = await fetch(url, {
             // Linux-optimized settings
             headers: {
                 'Connection': 'keep-alive',
                 'Accept-Encoding': 'gzip, deflate'
             }
-        } );
-        if ( ! res.ok ) {
-            throw new Error( `Failed to download DynamoDB Local: ${ res.statusText }` );
+        });
+        if (!res.ok) {
+            throw new Error(`Failed to download DynamoDB Local: ${res.statusText}`);
         }
 
-        const totalBytes = parseInt( res.headers.get( 'content-length' ) || '0', 10 );
-        if ( totalBytes === 0 ) {
-            throw new Error( 'Unable to determine the total download size.' );
+        const totalBytes = parseInt(res.headers.get('content-length') || '0', 10);
+        if (totalBytes === 0) {
+            throw new Error('Unable to determine the total download size.');
         }
 
-        const fileStream = fs.createWriteStream( targetPath );
+        const fileStream = fs.createWriteStream(targetPath);
         let downloadedBytes = 0;
 
-        return new Promise( ( resolve, reject ) => {
-            if ( ! res.body ) {
-                throw new Error( 'Response body is missing.' );
+        return new Promise((resolve, reject) => {
+            if (!res.body) {
+                throw new Error('Response body is missing.');
             }
 
             // Add timeout handling
-            const downloadTimeout = setTimeout( () => {
+            const downloadTimeout = setTimeout(() => {
                 fileStream.destroy();
-                reject( new Error( 'Download timed out' ) );
-            }, 30000 ); // 30 second timeout
+                reject(new Error('Download timed out'));
+            }, 30000); // 30 second timeout
 
-            res.body.pipe( fileStream );
+            res.body.pipe(fileStream);
 
-            res.body.on( 'data', chunk => {
+            res.body.on('data', chunk => {
                 downloadedBytes += chunk.length;
-                const progress = ( ( downloadedBytes / totalBytes ) * 100 ).toFixed( 2 );
-                process.stdout.write( `\rProgress: ${ progress }%` );
-            } );
+                const progress = ((downloadedBytes / totalBytes) * 100).toFixed(2);
+                process.stdout.write(`\rProgress: ${progress}%`);
+            });
 
-            fileStream.on( 'finish', () => {
-                clearTimeout( downloadTimeout );
-                process.stdout.write( '\nDownload completed.\n' );
-                resolve( targetPath );
-            } );
+            fileStream.on('finish', () => {
+                clearTimeout(downloadTimeout);
+                process.stdout.write('\nDownload completed.\n');
+                resolve(targetPath);
+            });
 
-            fileStream.on( 'error', err => {
-                clearTimeout( downloadTimeout );
-                reject( err );
-            } );
-        } );
+            fileStream.on('error', err => {
+                clearTimeout(downloadTimeout);
+                reject(err);
+            });
+        });
     }
 
-    public async downloadInternals( retryCount = 3 ): Promise<void> {
+    public async downloadInternals(retryCount = 3): Promise<void> {
         this.handleEmptyDirectoryCleanup();
 
-        if ( fs.existsSync( this.args.packageTmpPath ) ) {
-            const result = await this.validChecksum( this.args.packageTmpPath )
-                .then( () => "re-extract" )
-                .catch( () => "re-download" );
+        if (fs.existsSync(this.args.packageTmpPath)) {
+            const result = await this.validChecksum(this.args.packageTmpPath)
+                .then(() => "re-extract")
+                .catch(() => "re-download");
 
-            if ( result === "re-download" ) {
+            if (result === "re-download") {
                 // If checksum doesn't match, delete the file and re-download
-                fs.unlinkSync( this.args.packageTmpPath );
+                fs.unlinkSync(this.args.packageTmpPath);
 
-                return this.downloadInternals( retryCount );
+                return this.downloadInternals(retryCount);
             }
 
-            if ( result === "re-extract" ) {
-                return this.extractPackage( this.args.packageTmpPath );
+            if (result === "re-extract") {
+                return this.extractPackage(this.args.packageTmpPath);
             }
 
-            throw new Error( "Something went wrong" );
+            throw new Error("Something went wrong");
         }
 
-        const dynamoInternalsJAR = path.join( this.args.packageExtractPath, 'DynamoDBLocal.jar' );
+        const dynamoInternalsJAR = path.join(this.args.packageExtractPath, 'DynamoDBLocal.jar');
 
         let attempts = 0;
-        while ( attempts < retryCount ) {
+        while (attempts < retryCount) {
             try {
                 // Ensure the output directory exists and check if DynamoDB Local is already installed
-                if ( fs.existsSync( path.join( dynamoInternalsJAR ) ) ) {
+                if (fs.existsSync(path.join(dynamoInternalsJAR))) {
                     return;
                 }
 
                 await this.downloadWithProgress();
 
-                await this.validChecksum( this.args.packageTmpPath, this.args.packageChecksum );
+                await this.validChecksum(this.args.packageTmpPath, this.args.packageChecksum);
 
-                await this.extractPackage( this.args.packageTmpPath );
-            } catch ( error ) {
-                console.error( `Attempt ${ attempts + 1 }/${ retryCount } failed: ${ util.inspect( error, { depth: null } ) }` );
+                await this.extractPackage(this.args.packageTmpPath);
+            } catch (error) {
+                console.error(`Attempt ${attempts + 1}/${retryCount} failed: ${util.inspect(error, {depth: null})}`);
                 attempts++;
 
-                if ( attempts >= retryCount ) {
-                    throw new Error( `Failed to download and install DynamoDB Local after ${ retryCount } attempts.` );
+                if (attempts >= retryCount) {
+                    throw new Error(`Failed to download and install DynamoDB Local after ${retryCount} attempts.`);
                 }
             }
         }
     }
 
     public async start() {
-        const dynamoInternalsJAR = path.join( this.args.packageExtractPath, 'DynamoDBLocal.jar' );
+        const dynamoInternalsJAR = path.join(this.args.packageExtractPath, 'DynamoDBLocal.jar');
 
-        if ( ! fs.existsSync( dynamoInternalsJAR ) ) {
-            throw new Error( `DynamoDB Internals JAR file not found at ${ dynamoInternalsJAR }` );
+        if (!fs.existsSync(dynamoInternalsJAR)) {
+            throw new Error(`DynamoDB Internals JAR file not found at ${dynamoInternalsJAR}`);
         }
 
         const javaArgs = [
@@ -229,29 +230,29 @@ export class DynamoDBLocalServer {
             '-port',
             this.args.port.toString(),
             "-sharedDb",
-            ... this.args.executeArgs,
+            ...this.args.executeArgs,
         ];
 
-        if ( this.args.sharedDb ) {
-            javaArgs.push( '-sharedDb' );
+        if (this.args.sharedDb) {
+            javaArgs.push('-sharedDb');
         }
 
-        debug( `Launching DynamoDB Local with arguments: ${ javaArgs.join( ' ' ) }` );
+        debug(`Launching DynamoDB Local with arguments: ${javaArgs.join(' ')}`);
 
         const dynamoDBLocalProcess =
-            spawn( 'java', javaArgs, { cwd: this.args.packageExtractPath } );
+            spawn('java', javaArgs, {cwd: this.args.packageExtractPath});
 
-        dynamoDBLocalProcess.stdout.on( 'data', ( data ) => {
-            debug( `DDBServer: ${ data.toString().split( '\n' ).join( '\nDDBServer: ' ) }` );
-        } );
+        dynamoDBLocalProcess.stdout.on('data', (data) => {
+            debug(`DDBServer: ${data.toString().split('\n').join('\nDDBServer: ')}`);
+        });
 
-        dynamoDBLocalProcess.stderr.on( 'data', ( data ) => {
-            throw new Error( `stderr: ${ data.toString() }` );
-        } );
+        dynamoDBLocalProcess.stderr.on('data', (data) => {
+            throw new Error(`stderr: ${data.toString()}`);
+        });
 
-        dynamoDBLocalProcess.on( 'close', ( code ) => {
-            debug( `DynamoDB Local exited with code ${ code }` );
-        } );
+        dynamoDBLocalProcess.on('close', (code) => {
+            debug(`DynamoDB Local exited with code ${code}`);
+        });
 
         return dynamoDBLocalProcess;
     }
@@ -260,74 +261,74 @@ export class DynamoDBLocalServer {
         const port = this.args.port,
             pid = this.processPID;
 
-        function killProcessByPID( pid: string ) {
-            const killProcessCmd = `kill ${ pid }`;
+        function killProcessByPID(pid: string) {
+            const killProcessCmd = `kill ${pid}`;
 
-            exec( killProcessCmd, ( killError ) => {
-                if ( killError ) {
-                    console.error( `Error stopping process with PID ${ pid }:`, killError );
+            exec(killProcessCmd, (killError) => {
+                if (killError) {
+                    console.error(`Error stopping process with PID ${pid}:`, killError);
                 } else {
-                    debug( `Successfully stopped ${ port ? `process on port ${ port }` : '' } (PID: ${ pid })` );
+                    debug(`Successfully stopped ${port ? `process on port ${port}` : ''} (PID: ${pid})`);
                 }
-            } );
+            });
         }
 
-        if ( pid ) {
-            killProcessByPID( pid.toString() );
+        if (pid) {
+            killProcessByPID(pid.toString());
             return;
         }
 
-        const findProcessCmd = `lsof -i :${ port } -t`;
+        const findProcessCmd = `lsof -i :${port} -t`;
 
-        exec( findProcessCmd, ( error, stdout ) => {
-            if ( error ) {
-                debug( `Error finding process on port ${ port }:`, error );
+        exec(findProcessCmd, (error, stdout) => {
+            if (error) {
+                debug(`Error finding process on port ${port}:`, error);
                 return;
             }
 
             const pid = stdout.trim();
-            if ( ! pid ) {
-                debug( `No process found running on port ${ port }` );
+            if (!pid) {
+                debug(`No process found running on port ${port}`);
                 return;
             }
-            killProcessByPID( pid );
-        } );
+            killProcessByPID(pid);
+        });
     }
 
-    public async waitForServerListening( retryCount = 3, timeout = 2000 ) {
+    public async waitForServerListening(retryCount = 3, timeout = 2000) {
         const port = this.args.port;
 
         async function tryConnect() {
-            return await new Promise<Boolean>( ( resolve, reject ) => {
+            return await new Promise<Boolean>((resolve, reject) => {
                 const socket = new net.Socket();
 
-                socket.connect( port, "localhost", () => {
-                    debug( `Port ${ port } is active` );
+                socket.connect(port, "localhost", () => {
+                    debug(`Port ${port} is active`);
                     socket.destroy();
-                    resolve( true );
-                } );
+                    resolve(true);
+                });
 
-                socket.on( "error", reject );
+                socket.on("error", reject);
 
-                socket.setTimeout( timeout, () => {
-                    reject( new Error( `Timeout waiting for port ${ port } to become active` ) );
-                } );
-            } )
+                socket.setTimeout(timeout, () => {
+                    reject(new Error(`Timeout waiting for port ${port} to become active`));
+                });
+            })
         }
 
-        for ( let i = 0 ; i < ( retryCount + 1 ) ; i++ ) {
+        for (let i = 0; i < (retryCount + 1); i++) {
             try {
                 await tryConnect()
                 return true;
-            } catch ( e ) {
+            } catch (e) {
             }
 
-            debug( `Waiting for port ${ port } to become active... Attempt ${ i + 1 } of ${ retryCount }` );
+            debug(`Waiting for port ${port} to become active... Attempt ${i + 1} of ${retryCount}`);
 
-            await new Promise( ( resolve ) => setTimeout( resolve, timeout ) );
+            await new Promise((resolve) => setTimeout(resolve, timeout));
 
         }
 
-        throw new Error( `Port ${ port } is not active after ${ retryCount } attempts` );
+        throw new Error(`Port ${port} is not active after ${retryCount} attempts`);
     }
 }
